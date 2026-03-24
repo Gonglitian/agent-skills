@@ -1,7 +1,7 @@
 {
   "name": "@vla-reasoning/agent-skills",
-  "version": "0.1.0",
-  "description": "A collection of agent skills for Claude Code and other AI coding tools",
-  "keywords": ["agent-skills", "claude-code", "skills"],
+  "version": "0.2.0",
+  "description": "Research workflow skills for Claude Code: experiment management, paper reading, training monitoring, data validation, and more",
+  "keywords": ["agent-skills", "claude-code", "skills", "ml-research", "vla", "robotics"],
   "license": "MIT"
 }

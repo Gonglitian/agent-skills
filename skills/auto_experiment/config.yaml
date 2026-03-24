@@ -1,0 +1,64 @@
+# Auto Experiment Skill Configuration
+
+name: auto_experiment
+version: "2.0.0"
+description: Automated iterative experiment workflow with planning, execution, and reporting
+
+# Workspace structure
+workspace_dirs:
+  - code
+  - outputs
+  - outputs/checkpoints
+  - outputs/processed_data
+  - logs
+  - doc/agent
+  - scripts
+  - .claude/hooks
+
+# Branch naming
+branch_pattern: "autoresearch/{tag}"
+round_pattern: "autoresearch/{tag}-r{n}"
+
+# Experiment ID convention: r1, r2, r3, ...
+# Branch:  autoresearch/<tag>-r<N>
+# Log:     logs/train_r<N>.log
+# Report:  doc/agent/exp_r<N>.md
+
+# Results schema (authoritative definition)
+results_file: "results.tsv"
+results_columns:
+  - name: commit
+    type: string
+    description: Short git hash
+  - name: metric
+    type: float
+    description: Primary success metric value
+  - name: memory_gb
+    type: float
+    description: Peak GPU memory in GB
+  - name: status
+    type: enum
+    values: [success, early_stop, failed, baseline]
+  - name: description
+    type: string
+    description: What was tried
+
+# Context files
+context:
+  primary: "doc/agent/sketch.md"
+  architecture: "doc/agent/architecture.md"
+  findings: "doc/agent/findings.md"
+  per_round: "doc/agent/exp_r*.md"
+  implementation: "git notes"
+
+# Integration
+integrations:
+  reporting: "experiment_report"
+
+# Safety rules
+rules:
+  - "Never modify source data (symlink only)"
+  - "Commit before significant changes"
+  - "Update sketch.md incrementally"
+  - "Ask user when unclear"
+  - "Monitor until completion, then analyze"

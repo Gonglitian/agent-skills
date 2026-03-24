@@ -1,0 +1,222 @@
+# Experiment Workspace: {{TAG}}
+
+> Branch: autoresearch/{{TAG}}
+> Instruction: {{INSTRUCTION}}
+> Success Metric: {{METRIC}}
+> Data: {{DATA_PATH}} (symlinked, NEVER modify)
+
+---
+
+# SESSION PROTOCOL
+
+## ON SESSION START (MANDATORY)
+
+**STOP. Execute these before any work:**
+
+### 1. Read current state
+```bash
+cat doc/agent/sketch.md
+```
+
+### 2. Check recent history
+```bash
+git log --oneline -5 --show-notes
+tail -5 results.tsv
+```
+
+### 3. State your understanding aloud
+> "Phase: ___. Last completed: ___. Next step: ___."
+
+### 4. If unclear → ASK USER. If clear → proceed.
+
+---
+
+## CONTEXT UPDATE TRIGGERS
+
+**Update incrementally, not just at session end.**
+
+| When | Update What |
+|------|-------------|
+| After significant action | sketch.md (current state + next step) |
+| After experiment round | results.tsv + exp_r\<N\>.md + sketch.md |
+| After design decision | architecture.md |
+| After insight/pattern found | findings.md |
+| Before risky change | `git commit` + sketch.md |
+| At session end | sketch.md (full state) + `git add doc/agent/ && git commit` |
+
+**Heuristic: If session crashes now, would the next session know what happened?**
+- No → update context now
+- Yes → keep working
+
+---
+
+## CONTEXT UPDATE PROCEDURES
+
+### Quick Update (after any significant action)
+Edit sketch.md "Current State":
+```markdown
+- Phase: <current>
+- Last action: <what you just did>
+- Next step: <what's next>
+```
+
+### After Experiment Round
+```bash
+# 1. Record result (use EXACT column names)
+echo -e "$(git rev-parse --short HEAD)\t<metric>\t<memory_gb>\t<status>\t<description>" >> results.tsv
+
+# 2. Implementation notes
+git notes add -m "Round <N>: <description>
+Result: <metric>
+What worked/didn't: ..." HEAD
+
+# 3. Write doc/agent/exp_r<N>.md
+# 4. Update findings.md with new patterns
+# 5. Update sketch.md
+```
+
+### After Design Decision
+Append to `doc/agent/architecture.md`:
+```markdown
+### Decision: <title>
+**Context:** <problem>
+**Options:** <considered>
+**Decision:** <chosen>
+**Rationale:** <why>
+```
+
+### Before Risky Change
+```bash
+git add -A && git commit -m "checkpoint: before <risky thing>"
+# Update sketch.md with what you're about to try
+```
+
+### At Session End
+```bash
+# Full sketch.md update: phase, accomplished, next steps, blockers
+git add doc/agent/ && git commit -m "session: <summary>"
+```
+
+---
+
+# CONTEXT FILES
+
+| File | Purpose | Updated |
+|------|---------|---------|
+| `doc/agent/sketch.md` | Current state & next steps | Frequently |
+| `doc/agent/architecture.md` | Design decisions | When decisions made |
+| `doc/agent/findings.md` | Patterns, baselines, insights | After analysis |
+| `doc/agent/exp_r*.md` | Per-round analysis | After each round |
+| `results.tsv` | Metrics tracking | After each round |
+| `git notes` | Implementation details | Each commit |
+
+### Sketch.md Size Management
+If sketch.md exceeds ~100 lines:
+- Move old session log entries → findings.md
+- Move settled decisions → architecture.md
+- Keep only: current state, active experiment, next steps, open questions
+
+---
+
+# EXPERIMENT EXECUTION
+
+## Launching Is NOT Task Completion
+
+**The workflow is: Launch → Monitor → Analyze → Propose → Loop**
+
+## Monitoring (Context-Efficient)
+
+**DO NOT use `tail -f` — it floods context.**
+
+```bash
+# Option 1: Background monitor (preferred — only outputs on metric changes)
+./scripts/monitor.sh --log logs/train_r<N>.log --pid $(cat logs/train.pid) --interval 120
+
+# Option 2: Sparse polling
+grep -E "(loss|epoch|val_)" logs/train_r<N>.log | tail -3
+
+# Option 3: SLURM
+squeue -j <job_id> -h -o "%T %M"
+```
+
+## Early Stopping Heuristics
+
+**Compare current run against baselines in findings.md:**
+
+| Training % | STOP if | CONTINUE if |
+|------------|---------|-------------|
+| First 100 steps | Loss NaN/Inf/increasing | Steady decrease |
+| ~5% | Loss >5x baseline at same point | Within 2x of baseline |
+| ~10% | Val metric flat or random-level | Trending up, even slowly |
+| ~25% | Significantly below baseline curve | Comparable to baseline |
+| ~50% | Plateaued well below baseline | On track to match/beat |
+
+```bash
+# Compare current vs baseline
+grep -E "val_" logs/train_r<N>.log | tail -3
+cat doc/agent/findings.md | grep -A5 "Baseline"
+```
+
+## After Round Completes (or Early Stops)
+
+**You are in a LOOP. Do NOT stop here.**
+
+1. Record result in results.tsv
+2. Write analysis in doc/agent/exp_r\<N\>.md (diagnose why it worked/failed)
+3. Update findings.md with new patterns
+4. Propose next round (or exit loop if done)
+5. Update sketch.md
+
+**Exit loop when:** target achieved, hypotheses exhausted, or user stops.
+
+---
+
+# RULES
+
+## Data
+- Data is symlinked from: {{DATA_PATH}}
+- **NEVER modify** files in `data/`
+- Write outputs to: `outputs/processed_data/`
+
+## Two-Level Logging
+- **High-level** (doc/agent/): architecture, reports, findings — what you'd tell a researcher
+- **Implementation** (git notes): debugging, failed attempts, technical gotchas
+
+## Version Control
+```bash
+# Before significant changes
+git add -A && git commit -m "checkpoint: <description>"
+
+# Per-round branching
+git checkout -b autoresearch/{{TAG}}-r<N>
+
+# After failed round
+git checkout autoresearch/{{TAG}}
+
+# After successful round
+git checkout autoresearch/{{TAG}} && git merge autoresearch/{{TAG}}-r<N>
+```
+
+## Results Schema
+Columns: `commit`, `metric`, `memory_gb`, `status`, `description`
+Status values: `success`, `early_stop`, `failed`, `baseline`
+
+---
+
+# KEY FILES
+
+| Purpose | Path |
+|---------|------|
+| Training script | {{TRAIN_SCRIPT}} |
+| Config | {{CONFIG_PATH}} |
+| Evaluation | {{EVAL_SCRIPT}} |
+
+# QUICK REFERENCE
+
+```bash
+cat doc/agent/sketch.md                          # Current state
+git log --oneline -5 --show-notes                # Recent history
+column -t -s $'\t' results.tsv                   # All results
+git notes add -m "..." HEAD                      # Save impl details
+./scripts/monitor.sh --log <f> --pid <p>         # Monitor training
+```
