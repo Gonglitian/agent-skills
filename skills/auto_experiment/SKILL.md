@@ -1,6 +1,6 @@
 ---
 name: auto_experiment
-description: Automated experiment workflow for code + data experiments with structured planning, execution, and reporting.
+description: Automated experiment workflow for code + data experiments with structured planning, execution, and reporting. Trigger when user wants to run a full experiment cycle, says "开始实验", "跑一下验证", "实验流程", "setup experiment", "run experiment", "验证一下", "搭建实验", or needs workspace creation + iterative experiment loop + final reporting.
 ---
 
 # auto_experiment

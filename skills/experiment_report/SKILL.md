@@ -1,6 +1,6 @@
 ---
 name: experiment_report
-description: Write structured experiment reports for robot learning and AI research.
+description: Write structured experiment reports for robot learning and AI research. Trigger when user says "写个报告", "总结实验结果", "实验报告", "experiment report", "总结一下当前实验", "出个report", "写个技术报告", or asks to summarize training results with metrics tables and W&B links.
 ---
 
 # experiment_report

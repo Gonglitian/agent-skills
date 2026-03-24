@@ -1,6 +1,6 @@
 ---
 name: project-init
-description: Initialize a new research project with conda environment, CLAUDE.md, git setup, data/checkpoint path organization, and planning files. Trigger when user starts a new project, says "新项目", "初始化", "project init", "/init", or clones a new repo.
+description: Initialize a new research project with conda environment, CLAUDE.md, git setup, data/checkpoint path organization, and planning files. Trigger when user starts a new project, says "新项目", "初始化", "project init", "/init", "搭建环境", "新建项目", "配置环境", "setup environment", or clones a new repo and needs conda + paths + CLAUDE.md setup.
 ---
 
 # Research Project Initializer

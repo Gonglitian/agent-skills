@@ -1,6 +1,6 @@
 ---
 name: data-pipeline-check
-description: Validate data pipeline integrity, check dataset format compatibility, verify data quality, and diagnose data loading issues. Trigger when user mentions data problems, format conversion, dataset validation, or says "检查数据", "数据格式", "data check", "数据质量".
+description: Validate data pipeline integrity, check dataset format compatibility, verify data quality, and diagnose data loading issues. Trigger when user mentions data problems, format conversion, dataset validation, or says "检查数据", "数据格式", "data check", "数据质量", "数据对不对", "格式兼容吗", "数据结构", "数据长什么样", "action space对得上吗", "验证数据".
 ---
 
 # Data Pipeline Checker

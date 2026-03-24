@@ -1,6 +1,6 @@
 ---
 name: idea_refinery
-description: Iteratively refine a research idea through literature survey, validation, and branching exploration until convergence.
+description: Iteratively refine a research idea through literature survey, validation, and branching exploration until convergence. Trigger when user says "这个想法可行吗", "打磨一下idea", "idea可行性", "验证这个方向", "refine idea", "帮我想想这个方向", "评估一下feasibility", or wants to iteratively validate and improve a research concept.
 ---
 
 # idea_refinery
