@@ -74,17 +74,31 @@ npx tsx src/cli.ts search "auxiliary reconstruction loss for robot learning visu
 npx tsx src/cli.ts search "spatial forcing depth estimation multi-view geometry for VLA" --top 15
 ```
 
+### Step 2b: Semantic Scholar API Search (Broader Coverage)
+
+Complement vec-db with Semantic Scholar to catch papers outside the indexed conferences:
+
+```bash
+# Keyword search (high citation)
+curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED_KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
+
+# Recent papers (last 2 years)
+curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&year=2024-2026"
+```
+
+Run 2-3 keyword variants. Semantic Scholar covers 200M+ papers including workshops, journals, and preprints that vec-db may miss. Use citation counts to prioritize.
+
 ### Step 3: Select Candidate Papers
 
-From the combined vec-db results, select ~10 papers that are:
+From the combined vec-db + Semantic Scholar results, select ~10 papers that are:
 1. **Accepted at top venues** (ICLR, ICML, NeurIPS, CVPR, ICCV, ECCV, CoRL, RSS, ICRA, IROS, etc.) — prioritize these
 2. **Not already in the user's survey** — cross-reference with existing note
 3. **Highly relevant** — score > 0.25 is useful, but relevance to user's idea matters more
 4. **Diverse** — cover different sub-aspects, don't pick 10 papers doing the same thing
 
-### Step 4: Find arXiv IDs
+### Step 4: Find arXiv IDs and Read via AlphaXiv
 
-For papers without arXiv IDs in vec-db results, use WebSearch:
+For papers without arXiv IDs in vec-db results, check Semantic Scholar's `externalIds.ArXiv` field first, then fall back to WebSearch:
 ```
 WebSearch: "<paper title>" arXiv <year>
   allowed_domains: ["arxiv.org"]
@@ -94,7 +108,19 @@ WebSearch: "<paper title>" arXiv <year>
 
 If a paper has no arXiv preprint, replace it with another candidate that does.
 
-### Step 5: Download PDFs
+### Step 5: Read Papers — AlphaXiv First, PDF as Fallback
+
+**Prefer AlphaXiv** over downloading PDFs — it's faster and returns structured Markdown:
+
+```
+# Try AlphaXiv overview first (fast, structured)
+WebFetch: https://alphaxiv.org/overview/<ARXIV_ID>.md
+
+# If overview lacks detail, get full text
+WebFetch: https://alphaxiv.org/abs/<ARXIV_ID>.md
+```
+
+**Only download PDFs** if AlphaXiv returns 404:
 
 ```bash
 cd <papers-dir>/raw

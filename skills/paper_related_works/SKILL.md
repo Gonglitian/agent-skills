@@ -115,14 +115,23 @@ curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:{PAPER_ID}?fields=
 curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED_TITLE>&limit=5&fields=title,year,externalIds,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
 ```
 
-**4b. Web search (supplementary)**
+**4b. Local Vec-db semantic search (find related top-venue work)**
+
+```bash
+cd /home/vla-reasoning/proj/litian-research/vec-db
+npx tsx src/cli.ts search "<paper's key concepts>" --top 10
+```
+
+This finds top-venue papers with similar themes that may not directly cite the target but are closely related. Especially useful for discovering parallel/concurrent work.
+
+**4c. Web search (supplementary)**
 
 ```
 WebSearch: "<paper_title>" improvements OR "builds on" OR "extends" site:arxiv.org
 WebSearch: "<paper_title>" cite OR citing 2024 2025 2026
 ```
 
-**4c. AlphaXiv (if available)**
+**4d. AlphaXiv (if available)**
 
 Check the AlphaXiv overview for mentions of follow-up or concurrent work.
 

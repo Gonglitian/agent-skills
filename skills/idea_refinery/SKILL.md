@@ -171,12 +171,15 @@ Use the methods from `/paper_related_works` and `/topic_survey` for all paper op
 
 | Method | When to Use | How |
 |--------|------------|-----|
-| Semantic Scholar API | Keyword search, citation graph | `curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"` |
+| **Local Vec-db** | Precision search in 96K top-venue papers | `cd /home/vla-reasoning/proj/litian-research/vec-db && npx tsx src/cli.ts search "<QUERY>" --top 15` |
+| Semantic Scholar API | Keyword search, citation graph (200M+ papers) | `curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"` |
 | Semantic Scholar (recent) | Find cutting-edge work | Same but add `&year=2024-2026` |
 | Semantic Scholar (citations) | Find successors of a paper | `.../paper/ArXiv:{ID}?fields=citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount` |
 | Web search | Broad sweep, surveys | `WebSearch: "<topic>" site:arxiv.org` |
 | Papers With Code | Find benchmarks, code | `WebSearch: "<topic>" site:paperswithcode.com` |
 | Citation chain | Trace research lineage | From papers already in cache, follow references + citing papers (see `/paper_related_works` Steps 3-4) |
+
+**Recommended order**: Vec-db first (fast, top-venue) → Semantic Scholar (broader, with citation counts) → Web search (latest preprints). Deduplicate across sources by title.
 
 **Read papers** via AlphaXiv (always try first for any arXiv paper):
 

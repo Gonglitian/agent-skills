@@ -46,13 +46,13 @@ description: >
 
 ---
 
-## Step 2: 多源定向搜索
+## Step 2: 三源定向搜索
 
-针对每个设计维度，构造**定向搜索查询**，通过 vec-db 和 web 并行搜索。
+针对每个设计维度，通过 **vec-db + Semantic Scholar + web 搜索** 三源并行搜索。
 
-### 2.1 Vec-db 搜索
+### 2.1 Vec-db 语义搜索（精准匹配 96K 顶会论文）
 
-对每个维度构造 1-2 个语义查询，运行：
+对每个维度构造 1-2 个语义查询：
 
 ```bash
 cd /home/vla-reasoning/proj/litian-research/vec-db/
@@ -64,15 +64,38 @@ npx tsx src/cli.ts search "QUERY" --top 10
 - 例：D2(解码器) → `"point cloud decoder architecture transformer MLP for manipulation"`
 - 例：D5(范围) → `"selective object-centric reconstruction vs full scene manipulation"`
 
-### 2.2 Web 搜索
+### 2.2 Semantic Scholar API 搜索（覆盖 200M+ 论文）
+
+对每个维度构造 1 个关键词查询，补充 vec-db 未索引的论文：
+
+```bash
+curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED_KEYWORDS>&limit=10&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
+```
+
+特别适合：
+- 找高引用的经典论文
+- 发现 workshop / journal 论文（vec-db 可能没收录）
+- 获取 arXiv ID（`externalIds.ArXiv`）用于后续 AlphaXiv 阅读
+
+### 2.3 Web 搜索（捕获最新 preprint）
 
 对每个维度构造 1 个 web 搜索查询，侧重最新工作（当前年份 ±1 年）。
 
-### 2.3 并行执行
+### 2.4 并行执行
 
-**强烈建议用并行 subagents**：启动 2 个 Agent（一个跑 vec-db 全部查询，一个跑 web 全部查询），在同一条消息中发出。
+**强烈建议用并行 subagents**：启动 3 个 Agent（vec-db / Semantic Scholar / web），在同一条消息中发出。
 
-搜索结果中排除已知论文（用户应提供已调研论文列表）。
+搜索结果跨三源去重（按标题相似度），排除已知论文。
+
+### 2.5 阅读关键论文（AlphaXiv 优先）
+
+对 Gap 分析需要深读的论文，优先用 AlphaXiv：
+
+```
+WebFetch: https://alphaxiv.org/overview/<ARXIV_ID>.md
+```
+
+AlphaXiv 404 时再下载 PDF。
 
 ---
 
