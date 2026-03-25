@@ -7,6 +7,141 @@ description: "Cross-platform information gathering from Xiaohongshu, Bilibili, Z
 
 Search and collect information from 4 platforms simultaneously: Xiaohongshu (小红书), Bilibili (B站), Zhihu (知乎), and X/Twitter.
 
+## Prerequisites & Installation
+
+This skill depends on several tools. Follow these steps to set up from scratch.
+
+### 1. MediaCrawler (for Xiaohongshu + Bilibili)
+
+```bash
+# Clone
+git clone --depth 1 https://github.com/NanmiCoder/MediaCrawler.git
+cd MediaCrawler
+
+# Python environment
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+# Browser engine
+playwright install chromium
+
+# Config: set headless mode and disable CDP
+# In config/base_config.py, change:
+#   HEADLESS = True
+#   ENABLE_CDP_MODE = False
+#   SAVE_DATA_OPTION = "json"
+#   LOGIN_TYPE = "cookie"
+
+# If Bilibili uses channel="chrome", remove it:
+# In media_platform/bilibili/core.py and media_platform/zhihu/core.py
+# Remove all channel="chrome" parameters (use bundled chromium instead)
+```
+
+**Cookie setup**: Export cookies from your browser (using Cookie-Editor extension) for each platform, then paste them into `config/base_config.py` as `COOKIES = "key=val;key=val;..."`. The provided `crawl.sh` script handles this per-platform.
+
+**crawl.sh helper script**: Create a shell script that:
+- Accepts platform name (xhs/bili) and keywords as arguments
+- Swaps the correct cookies into `config/base_config.py`
+- Runs `python main.py --platform <name> --lt cookie --type search`
+
+### 2. yt-dlp (for Bilibili audio extraction)
+
+```bash
+# Install in MediaCrawler's venv
+source venv/bin/activate
+pip install yt-dlp
+```
+
+Also requires **ffmpeg** on the system:
+```bash
+# Ubuntu/Debian
+sudo apt install ffmpeg
+# or check: ffmpeg -version
+```
+
+### 3. Crawl4AI MCP Server (for Zhihu + X/Twitter)
+
+```bash
+# Clone
+git clone --depth 1 https://github.com/sadiuysal/crawl4ai-mcp-server.git
+cd crawl4ai-mcp-server
+
+# Python environment
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python -m playwright install chromium
+```
+
+**Important**: The default MCP server ignores cookies passed via the `crawler` parameter. To enable cookie + delay support (required for X/Twitter), patch `crawler_agent/mcp_server.py`:
+
+In both `_run_scrape()` and `_persist_scrape()`, replace the fixed `BrowserConfig(verbose=False)` with:
+```python
+browser_kwargs = {"verbose": False}
+run_kwargs = {}
+if args.crawler and isinstance(args.crawler, dict):
+    if "cookies" in args.crawler:
+        browser_kwargs["cookies"] = args.crawler["cookies"]
+    if "headers" in args.crawler:
+        browser_kwargs["headers"] = args.crawler["headers"]
+    if "delay" in args.crawler:
+        run_kwargs["delay_before_return_html"] = float(args.crawler["delay"])
+    if "wait_until" in args.crawler:
+        run_kwargs["wait_until"] = args.crawler["wait_until"]
+browser_cfg = BrowserConfig(**browser_kwargs)
+run_cfg = None
+if run_kwargs:
+    from crawl4ai.async_configs import CrawlerRunConfig
+    run_cfg = CrawlerRunConfig(**run_kwargs)
+```
+
+**Suppress startup warnings** (breaks MCP stdio): Create `run_mcp_clean.py`:
+```python
+import warnings; warnings.filterwarnings("ignore")
+import os; os.environ["PYTHONWARNINGS"] = "ignore"
+from crawler_agent.mcp_server import main; main()
+```
+
+**Register with Claude Code**:
+```bash
+claude mcp add crawl4ai -s user \
+  -e PYTHONWARNINGS=ignore \
+  -- /path/to/crawl4ai-mcp-server/.venv/bin/python \
+  /path/to/crawl4ai-mcp-server/run_mcp_clean.py
+```
+
+### 4. Brave Search MCP (for Zhihu + X/Twitter search)
+
+```bash
+claude mcp add brave-search -s user \
+  -e BRAVE_API_KEY=<your-key> \
+  -- npx -y @modelcontextprotocol/server-brave-search
+```
+
+Get a free API key at https://brave.com/search/api/
+
+### 5. Data Directory Setup
+
+```bash
+# Create data directories on your data disk
+DATA_BASE="/data1/$USER/social_crawler"  # adjust to your setup
+mkdir -p $DATA_BASE/{xhs/json,bili/{json,audio},zhihu/crawl4ai,x/crawl4ai,transcripts}
+```
+
+### 6. Platform Cookies
+
+Each platform needs cookies exported from your logged-in browser session:
+
+| Platform | Required Cookies | How to Get |
+|----------|-----------------|------------|
+| **Xiaohongshu** | a1, webId, web_session, webBuild | Login on xiaohongshu.com → Cookie-Editor → Export JSON |
+| **Bilibili** | SESSDATA, bili_jct, DedeUserID, buvid3 | Login on bilibili.com → Cookie-Editor → Export JSON |
+| **X/Twitter** | auth_token, ct0, twid, kdt | Login on x.com → Cookie-Editor → Export JSON |
+| **Zhihu** | Not needed | Uses Brave Search (public) + Crawl4AI (no login) |
+
+Cookies expire periodically. Re-export when you get login errors.
+
+---
+
 ## When to Use
 
 - User asks to "search everywhere" or "全网搜索" on a topic
@@ -30,7 +165,6 @@ Search and collect information from 4 platforms simultaneously: Xiaohongshu (小
 Take the user's topic and prepare platform-appropriate keywords:
 - **Chinese platforms** (小红书, B站, 知乎): Use Chinese keywords
 - **X/Twitter**: Translate to English keywords
-- If the topic is already bilingual, use both
 
 Example: User says "世界模型" →
 - XHS/Bili/Zhihu: "世界模型,world model"
@@ -43,111 +177,82 @@ Run all 4 platform searches simultaneously for maximum speed.
 #### 2a. Xiaohongshu (小红书)
 
 ```bash
-cd /home/vla-reasoning/proj/research_tracker/social_tools/MediaCrawler
+cd <MediaCrawler_path>
 source venv/bin/activate
 ./crawl.sh xhs "<中文关键词>" <数量>
 ```
 
-Data saves to: `/data1/vla-reasoning/social_crawler/xhs/json/`
-- `search_contents_YYYY-MM-DD.json` — post content + engagement metrics
-- `search_comments_YYYY-MM-DD.json` — comments
+Data saves to: `<data_base>/xhs/json/`
 
 #### 2b. Bilibili (B站)
 
 ```bash
-cd /home/vla-reasoning/proj/research_tracker/social_tools/MediaCrawler
-source venv/bin/activate
 ./crawl.sh bili "<中文关键词>" <数量>
 ```
 
-Data saves to: `/data1/vla-reasoning/social_crawler/bili/json/`
+Data saves to: `<data_base>/bili/json/`
 
-**Optional: Extract audio from videos**
+**Optional audio extraction**:
 ```bash
 ./bili_audio_extract.sh from_json <数量>
 ```
-Audio saves to: `/data1/vla-reasoning/social_crawler/bili/audio/`
 
 #### 2c. Zhihu (知乎)
 
-Zhihu blocks server IP for direct API access. Use two-step approach:
-
-**Search**: Use Brave Search MCP with `site:zhihu.com`
+**Search**: Brave Search MCP with `site:zhihu.com`
 ```
 mcp__brave-search__brave_web_search: "site:zhihu.com <关键词>"
 ```
 
-**Fetch full content**: Use Crawl4AI MCP to scrape each URL
+**Fetch full content**: Crawl4AI MCP
 ```
-mcp__crawl4ai__scrape: url=<zhihu_url>, output_dir=/data1/vla-reasoning/social_crawler/zhihu/crawl4ai
+mcp__crawl4ai__scrape: url=<zhihu_url>, output_dir=<data_base>/zhihu/crawl4ai
 ```
-
-Data saves to: `/data1/vla-reasoning/social_crawler/zhihu/crawl4ai/`
 
 #### 2d. X/Twitter
 
-**Search**: Use Brave Search MCP with `site:x.com`
+**Search**: Brave Search MCP with `site:x.com`
 ```
 mcp__brave-search__brave_web_search: "site:x.com <english keywords>"
 ```
 
-**Fetch full tweet**: Use Crawl4AI MCP with cookies and delay for JS rendering
+**Fetch full tweet**: Crawl4AI MCP with cookies and delay
 ```
 mcp__crawl4ai__scrape:
   url=<tweet_url>
-  output_dir=/data1/vla-reasoning/social_crawler/x/crawl4ai
-  crawler={"cookies": [
-    {"name": "auth_token", "value": "883c4b2927acc6599bedcc2fef7dc57d34463080", "domain": ".x.com", "path": "/", "secure": true, "httpOnly": true},
-    {"name": "ct0", "value": "1d9c3b00442989430d4efee6e26e642c828dba1031efae1ced0e4b0ee9fd22cb51245041e88d921b78b1276bc38667dc45821ae8c70741dfdd1aed7d9f06a39fdc0c566d6a9bcb4860525819d7419207", "domain": ".x.com", "path": "/", "secure": true},
-    {"name": "twid", "value": "u%3D1874611787418779648", "domain": ".x.com", "path": "/", "secure": true},
-    {"name": "kdt", "value": "Mn5U67CWPzCq6mX1B05qXQLiInODN17FVJrZ77Dc", "domain": ".x.com", "path": "/", "secure": true},
-    {"name": "lang", "value": "en", "domain": ".x.com", "path": "/"}
-  ], "delay": 5, "wait_until": "domcontentloaded"}
+  output_dir=<data_base>/x/crawl4ai
+  crawler={"cookies": [...], "delay": 5, "wait_until": "domcontentloaded"}
 ```
 
-Data saves to: `/data1/vla-reasoning/social_crawler/x/crawl4ai/`
+### Step 3: Summarize Results
 
-### Step 3: Collect and Summarize Results
-
-After all searches complete, summarize findings:
-
+After all searches complete:
 1. Read collected data from each platform
 2. Present a unified summary organized by theme (not by platform)
 3. Highlight key insights, trending opinions, notable posts
-4. Include links for the user to follow up
-
-### Step 4: Optional Audio Transcription
-
-If Bilibili videos were collected and user wants transcripts:
-```bash
-conda run -n whisper python /home/vla-reasoning/proj/research_tracker/transcribe.py \
-  /data1/vla-reasoning/social_crawler/bili/audio/ \
-  --language zh --gpus 0,1,2,3,4 \
-  --context "<topic-specific terms>" \
-  --output-dir /data1/vla-reasoning/social_crawler/transcripts/batch
-```
+4. Include links for follow-up
 
 ## Data Path Management
 
 All data goes to the data disk, never the home directory:
 
 ```
-/data1/vla-reasoning/social_crawler/
-├── xhs/json/           ← 小红书 posts + comments
+<data_base>/
+├── xhs/json/           ← Xiaohongshu posts + comments
 ├── bili/
-│   ├── json/           ← B站 video info + comments
-│   └── audio/          ← B站 extracted audio (MP3)
-├── zhihu/crawl4ai/     ← 知乎 full articles (Markdown)
+│   ├── json/           ← Bilibili video info + comments
+│   └── audio/          ← Extracted audio (MP3)
+├── zhihu/crawl4ai/     ← Zhihu full articles (Markdown)
 ├── x/crawl4ai/         ← X/Twitter tweets (Markdown)
 └── transcripts/        ← Audio transcriptions
-    ├── batch/          ← Batch transcription results
-    └── models/         ← Model symlinks
 ```
 
-## Important Notes
+## Troubleshooting
 
-- **MediaCrawler requires cookies** — XHS and Bilibili cookies are pre-configured in `crawl.sh`
-- **X/Twitter cookies expire** — if Crawl4AI returns login page, ask user to export fresh cookies
-- **Zhihu has strict anti-crawl** — only Brave Search + Crawl4AI works from this server
-- **Run XHS and Bilibili searches sequentially** (they share config file), but run Zhihu and X in parallel via MCP
-- **Chinese output** — summarize in Chinese with English technical terms preserved
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| MediaCrawler login failed | Cookie expired | Re-export from browser |
+| X/Twitter returns login page | Cookie not passed or expired | Check Crawl4AI cookie patch; re-export cookies |
+| Zhihu 403 error | Server IP blocked | Use Brave Search (works) instead of direct API |
+| Bilibili "chrome not found" | Missing browser | Remove `channel="chrome"` from bilibili/core.py |
+| Crawl4AI MCP "Failed to connect" | Startup warnings | Use `run_mcp_clean.py` wrapper |
