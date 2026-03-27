@@ -15,7 +15,7 @@ description: >
 # Comprehensive Research Survey Pipeline
 
 Orchestrate a full-spectrum research investigation combining **academic paper search** (6 sources) and
-**social media gathering** (5 platforms) into structured, cross-referenced survey reports with concept
+**social media gathering** (5 platforms: B站/知乎/X/Reddit/Tech Blogs) into structured, cross-referenced survey reports with concept
 glossary and pseudocode.
 
 This skill produces the same quality and structure as a manual month-long literature review, but in
@@ -49,7 +49,7 @@ done
 ```
 
 If not found, **stop and ask the user**:
-> "MediaCrawler is required for social platform search (especially 小红书). Please provide the path to your MediaCrawler installation, or read the installation guide: `references/mediacrawler_setup.md`"
+> "MediaCrawler is required for social platform search (Bilibili etc.). Please provide the path to your MediaCrawler installation, or read the installation guide: `references/mediacrawler_setup.md`"
 
 Check if MediaCrawler venv exists and has playwright:
 ```bash
@@ -174,37 +174,33 @@ Also write <output_dir>/<topic>/vecdb_papers.md with the raw vec-db results tabl
 ```
 Search social platforms and the web for discussions about "<TOPIC>".
 
-## Platform 1: Xiaohongshu (小红书) — via MediaCrawler
+## Platform 1: Bilibili (B站) — via MediaCrawler
 cd <MEDIACRAWLER_PATH>
 source venv/bin/activate
-./crawl.sh xhs "<中文关键词>" 20
+./crawl.sh bili "<中文关键词>" 20
 
 If crawl.sh doesn't exist, run directly:
-python main.py --platform xhs --lt cookie --type search --keywords "<关键词>"
+python main.py --platform bili --lt cookie --type search --keywords "<关键词>"
 
 Read the JSON output from the data directory.
 
-## Platform 2: Bilibili (B站) — via MediaCrawler
-./crawl.sh bili "<中文关键词>" 20
-OR: python main.py --platform bili --lt cookie --type search --keywords "<关键词>"
-
-## Platform 3: Zhihu (知乎) — via WebSearch + WebFetch
+## Platform 2: Zhihu (知乎) — via WebSearch + WebFetch
 WebSearch: "<topic> site:zhihu.com"
 For top results, WebFetch the full content (may 403, use search snippets as fallback).
 
-## Platform 4: X/Twitter — via WebSearch
+## Platform 3: X/Twitter — via WebSearch
 WebSearch: "<english topic> site:x.com 2024 2025"
 
-## Platform 5: Reddit — via WebSearch
+## Platform 4: Reddit — via WebSearch
 WebSearch: "<english topic> site:reddit.com discussion"
 
-## Platform 6: Tech Blogs
+## Platform 5: Tech Blogs
 WebSearch: "<topic> blog deep dive 2024 2025"
 WebSearch: "<topic> 技术博客 深度解析"
 
 ## Output
 Write to <output_dir>/<topic>/survey_social.md with:
-- Platform-organized sections (知乎/小红书/B站/Twitter/Reddit/博客)
+- Platform-organized sections (知乎/B站/Twitter/Reddit/博客)
 - Each entry: source, link, key points summary
 - Community consensus and disagreements section
 - Complete source URL list at the end
@@ -448,14 +444,11 @@ Fallback: `wget https://arxiv.org/pdf/<ID> -O <ID>.pdf`
 
 Use for: latest arXiv preprints, tech blogs, social platforms via `site:` filters, Google Scholar-indexed papers.
 
-### MediaCrawler (Xiaohongshu + Bilibili)
+### MediaCrawler (Bilibili)
 
 ```bash
 cd <MEDIACRAWLER_PATH>
 source venv/bin/activate
-
-# Xiaohongshu search
-python main.py --platform xhs --lt cookie --type search --keywords "<关键词>"
 
 # Bilibili search
 python main.py --platform bili --lt cookie --type search --keywords "<关键词>"
@@ -463,7 +456,7 @@ python main.py --platform bili --lt cookie --type search --keywords "<关键词>
 
 Data output: JSON files in the configured data directory.
 
-If MediaCrawler is not available or cookies are expired, fall back to WebSearch with `site:xiaohongshu.com` and `site:bilibili.com`.
+If MediaCrawler is not available or cookies are expired, fall back to WebSearch with `site:bilibili.com`.
 
 ### Brave Search MCP (enhanced web search, if available)
 
@@ -481,7 +474,6 @@ mcp__brave-search__brave_local_search: "<query>"  # for local/business results
 | Vec-db returns 0 results | Wrong path or unbuilt index | Verify path; run `npx tsx src/cli.ts status` |
 | Semantic Scholar 429 | Rate limited | Wait 60s, retry; or skip and rely on vec-db + WebSearch |
 | MediaCrawler login failed | Cookie expired | User must re-export cookies from browser |
-| XHS "请先登录" | No/expired cookie | Re-export cookies via Cookie-Editor |
 | AlphaXiv 404 | Paper not indexed | Fall back to PDF download |
 | Subagent timeout | Too much work per agent | Split into smaller tasks per agent |
 | WebFetch 403 on Zhihu | Server blocks bots | Use search snippets; try Crawl4AI if available |
