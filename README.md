@@ -40,9 +40,17 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | Skill | Description |
 |-------|-------------|
 | **project-init** | Initialize research projects: conda env, CLAUDE.md, git, data path organization |
+| **setup-dev-env-ubuntu** | Bootstrap a fresh Ubuntu machine: zsh + oh-my-zsh + fzf, Ghostty, Edge, VSCode, Miniconda, Claude Code + claude-hud, gh auth, Snipaste, WeChat, fcitx, Tailscale |
 | **git-pushing** | One-click git add → conventional commit → push |
 | **review-pr** | PR code review with CONTRIBUTING.md compliance checking |
 | **tmux-workspace** | Generate tmuxinator configs for multi-project terminal workspaces |
+
+### Meta (元技能)
+
+| Skill | Description |
+|-------|-------------|
+| **skill-creator** | Create new skills, run evals, benchmark variance, optimize descriptions for triggering accuracy |
+| **find-skills** | Discover and install skills from the open agent-skills ecosystem (skills.sh) |
 
 ### Domain-Specific (领域专用)
 
