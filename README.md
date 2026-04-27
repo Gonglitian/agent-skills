@@ -58,6 +58,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 |-------|-------------|
 | **isaaclab-dev** | Isaac Lab robot simulation development reference manual |
 | **isaaclab-async-pipeline-dev** | Async data generation pipeline for Isaac Lab |
+| **wuyin-gpt-image-2** | GPT-Image-2 text-to-image / image edit via 速创API (api.wuyinkeji.com): async submit → poll → download, with 3 paper-figure style presets (UniVLA / Physical Intelligence / Fast-WAM), each shipping curated reference images auto-uploaded to catbox and reused as `urls` for high-fidelity style-mimic |
 
 ### Paper Knowledge Base (论文知识库)
 

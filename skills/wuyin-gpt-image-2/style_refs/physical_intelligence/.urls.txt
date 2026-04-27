@@ -1,0 +1,5 @@
+pi05_data_panels.png	https://files.catbox.moe/2xebba.png
+pi0_overview.png	https://files.catbox.moe/5alct4.png
+pi0_vlm_action_expert.png	https://files.catbox.moe/7pjlmn.png
+pi_full_recap_loop.png	https://files.catbox.moe/4z5xcz.png
+pi_pretrain_posttrain.png	https://files.catbox.moe/8hccas.png

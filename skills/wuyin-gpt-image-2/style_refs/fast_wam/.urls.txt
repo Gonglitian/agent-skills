@@ -1,0 +1,2 @@
+fastwam_arch_and_masks.png	https://files.catbox.moe/yxni94.png
+fastwam_training_inference_modes.png	https://files.catbox.moe/x5fqvl.png
