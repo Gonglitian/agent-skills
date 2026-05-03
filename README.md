@@ -24,6 +24,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **idea_refinery** | Iteratively refine research ideas through survey, validation, and branching exploration |
 | **paper_related_works** | Build predecessor/successor citation maps for any paper |
 | **create_skill_with_paper** | Turn academic papers into reusable skill reference cards |
+| **paper-intro-writing** | Write reviewer-grade paper Introductions: 6-段黄金骨架 + 10 篇 VLA/robot-learning 顶会 paper 拆解 + Mad-Libs 填空模板 + 25 项自检表 |
 
 ### Experiment Management (实验管理)
 
