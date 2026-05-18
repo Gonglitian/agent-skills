@@ -259,31 +259,61 @@ If it launches but fonts look broken, install `fonts-noto-cjk`.
 
 ## Step 10: fcitx — Chinese input
 
-**Default path (try first):**
+**Default path (verified working on Ubuntu 20.04 + fcitx 4.2.9.7):**
 
 ```bash
-sudo apt install -y fcitx fcitx-pinyin fcitx-config-gtk
+sudo apt install -y fcitx fcitx-googlepinyin fcitx-config-gtk
 im-config -n fcitx
 # logout/login, then:
 fcitx &
-fcitx-config-gtk3   # add Pinyin
+fcitx-config-gtk3   # add Google Pinyin
 ```
 
-**Known gotcha — Ctrl+Space works in GNOME apps but NOT in Ghostty**: Ghostty's snap sandbox doesn't pick up the IM socket. The fix that worked last time was to **build fcitx from source** outside the snap world, or run ghostty with explicit IM env vars:
+> Prefer `fcitx-googlepinyin` over `fcitx-pinyin` — googlepinyin is what's verified on the user's main laptop and gives noticeably better predictions out of the box. The package installs an engine whose internal name in fcitx is just `googlepinyin` (no `fcitx-` prefix).
 
-```bash
-# Try first:
-GTK_IM_MODULE=fcitx QT_IM_MODULE=fcitx XMODIFIERS=@im=fcitx ghostty
+**Set IM env vars globally** (so all apps — including snap-sandboxed ones like Ghostty — pick up fcitx). Add to `/etc/environment` or `~/.pam_environment`:
+
+```
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx
 ```
 
-If that still fails, fall back to fcitx5 (newer, sometimes plays nicer with sandboxed apps):
+**Profile sanity check** — `~/.config/fcitx/profile` should contain:
 
-```bash
-sudo apt install -y fcitx5 fcitx5-chinese-addons fcitx5-config-qt
-im-config -n fcitx5
+```
+IMName=googlepinyin
+EnabledIMList=fcitx-keyboard-us:True,googlepinyin:True,...
 ```
 
-Last resort per past session: build fcitx from source.
+When fcitx auto-adds a newly-installed engine, it appends it as `:False` — flip to `:True` and set `IMName=` to activate. Reload with a clean restart (see gotcha below), not `fcitx -r`.
+
+**Switch keys (defaults):** `Ctrl+Space` toggles Chinese/English; `Ctrl+Shift` cycles among enabled IMs.
+
+**Diagnose:** `fcitx-diagnose` prints enabled IMs, module status, and whether env vars are picked up. Run it first whenever input "stops working" — usually answers the question in 5 seconds.
+
+### Do NOT install Sogou (sogoupinyin)
+
+Past attempts on Ubuntu 20.04 + fcitx 4.2 fail with:
+- `sogoupinyin-service` → `registerService fail` (D-Bus incompatibility)
+- `fcitx-sogoupinyinhxm.so` → `ABI Version Error`
+
+If a previous owner left it installed: `sudo apt purge -y sogoupinyin`. For more features than googlepinyin offers, prefer `sunpinyin` or `libpinyin`, **NOT** Sogou.
+
+### Common gotchas
+
+- **`fcitx -r` (soft restart) preserves in-memory state** and may overwrite manual edits to `~/.config/fcitx/profile` on the next shutdown. For clean profile changes: `killall fcitx`, edit the file, then start fcitx fresh.
+- **Zombie `fcitx Z+ defunct` process** sometimes lingers in `ps` output — harmless, ignore it.
+- **Ghostty Ctrl+Space gotcha** (if global env vars from above aren't being picked up): Ghostty's snap sandbox may not see the IM socket. Try launching with explicit vars:
+  ```bash
+  GTK_IM_MODULE=fcitx QT_IM_MODULE=fcitx XMODIFIERS=@im=fcitx ghostty
+  ```
+  If that still fails, fall back to fcitx5 (newer, sometimes plays nicer with sandboxed apps):
+  ```bash
+  sudo apt install -y fcitx5 fcitx5-chinese-addons fcitx5-config-qt
+  im-config -n fcitx5
+  ```
+  Last resort per past session: build fcitx from source outside the snap world.
 
 ---
 
