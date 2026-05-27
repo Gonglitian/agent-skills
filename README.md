@@ -26,6 +26,12 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[paper_related_works](https://github.com/Gonglitian/agent-skills/tree/main/skills/paper_related_works)** | Build predecessor/successor citation maps for any paper |
 | **[create_skill_with_paper](https://github.com/Gonglitian/agent-skills/tree/main/skills/create_skill_with_paper)** | Turn academic papers into reusable skill reference cards |
 | **[paper-intro-writing](https://github.com/Gonglitian/agent-skills/tree/main/skills/paper-intro-writing)** | Write reviewer-grade paper Introductions: 6-段黄金骨架 + 10 篇 VLA/robot-learning 顶会 paper 拆解 + Mad-Libs 填空模板 + 25 项自检表 |
+| **[research-refine](https://github.com/Gonglitian/agent-skills/tree/main/skills/research-refine)** | Turn a vague direction into a problem-anchored, elegant method plan via iterative GPT-5.4 review |
+| **[experiment-plan](https://github.com/Gonglitian/agent-skills/tree/main/skills/experiment-plan)** | Turn a refined proposal into a claim-driven experiment roadmap: ablation matrix, eval protocol, run order, compute budget |
+| **[review-ral](https://github.com/Gonglitian/agent-skills/tree/main/skills/review-ral)** | IEEE RA-L paper review assistant: read PDF → multi-source related-work search → parallel deep-read → full bilingual review with scores |
+| **[multi-platform-search](https://github.com/Gonglitian/agent-skills/tree/main/skills/multi-platform-search)** | Cross-platform info gathering from Xiaohongshu, Bilibili, Zhihu, and X/Twitter simultaneously |
+| **[notion-paper-table](https://github.com/Gonglitian/agent-skills/tree/main/skills/notion-paper-table)** | Build a structured literature survey database in Notion with paper metadata |
+| **[paper-discovery-sources](https://github.com/Gonglitian/agent-skills/tree/main/skills/paper-discovery-sources)** | Shared 3-source paper-discovery reference (vec-db / Semantic Scholar / AlphaXiv) loaded by other skills — not user-invokable |
 
 ### Experiment Management (实验管理)
 
@@ -36,6 +42,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[gpu-train-monitor](https://github.com/Gonglitian/agent-skills/tree/main/skills/gpu-train-monitor)** | Multi-GPU training monitoring: GPU stats, loss tracking, throughput analysis |
 | **[train-debug](https://github.com/Gonglitian/agent-skills/tree/main/skills/train-debug)** | Systematic training diagnosis: OOM, NaN gradients, loss plateau, multi-GPU issues |
 | **[data-pipeline-check](https://github.com/Gonglitian/agent-skills/tree/main/skills/data-pipeline-check)** | Dataset validation, schema checks, quality metrics, and compatibility verification |
+| **[weights-and-biases](https://github.com/Gonglitian/agent-skills/tree/main/skills/weights-and-biases)** | Track ML experiments with W&B: auto-logging, real-time visualization, hyperparameter sweeps, model registry |
 
 ### Engineering (代码工程)
 
@@ -44,6 +51,8 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[project-init](https://github.com/Gonglitian/agent-skills/tree/main/skills/project-init)** | Initialize research projects: conda env, CLAUDE.md, git, data path organization |
 | **[setup-dev-env-ubuntu](https://github.com/Gonglitian/agent-skills/tree/main/skills/setup-dev-env-ubuntu)** | Bootstrap a fresh Ubuntu machine: zsh + oh-my-zsh + fzf, Ghostty, Edge, VSCode, Miniconda, Claude Code + claude-hud, gh auth, Snipaste, WeChat, fcitx, Tailscale |
 | **[tmux-workspace](https://github.com/Gonglitian/agent-skills/tree/main/skills/tmux-workspace)** | Generate tmuxinator configs for multi-project terminal workspaces |
+| **[ucr_hpcc_cluster](https://github.com/Gonglitian/agent-skills/tree/main/skills/ucr_hpcc_cluster)** | Work with the UCR HPCC cluster: connecting, job submission, software management, data storage |
+| **[ghostty-cjk-input-debug](https://github.com/Gonglitian/agent-skills/tree/main/skills/ghostty-cjk-input-debug)** | Diagnose and fix CJK input-method issues in Ghostty terminal on Linux (snap + fcitx5 + GTK4) |
 
 ### Meta (元技能)
 
@@ -51,6 +60,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 |-------|-------------|
 | **[skill-creator](https://github.com/Gonglitian/agent-skills/tree/main/skills/skill-creator)** | Create new skills, run evals, benchmark variance, optimize descriptions for triggering accuracy |
 | **[find-skills](https://github.com/Gonglitian/agent-skills/tree/main/skills/find-skills)** | Discover and install skills from the open agent-skills ecosystem (skills.sh) |
+| **[planning-with-files](https://github.com/Gonglitian/agent-skills/tree/main/skills/planning-with-files)** | Manus-style file-based planning (task_plan.md / findings.md / progress.md) for complex multi-step tasks |
 
 ### Domain-Specific (领域专用)
 
@@ -59,6 +69,8 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[isaaclab-dev](https://github.com/Gonglitian/agent-skills/tree/main/skills/isaaclab-dev)** | Isaac Lab robot simulation development reference manual |
 | **[isaaclab-async-pipeline-dev](https://github.com/Gonglitian/agent-skills/tree/main/skills/isaaclab-async-pipeline-dev)** | Async data generation pipeline for Isaac Lab |
 | **[wuyin-gpt-image-2](https://github.com/Gonglitian/agent-skills/tree/main/skills/wuyin-gpt-image-2)** | GPT-Image-2 text-to-image / image edit via 速创API (api.wuyinkeji.com): async submit → poll → download, with 3 paper-figure style presets (UniVLA / Physical Intelligence / Fast-WAM), each shipping curated reference images auto-uploaded to catbox and reused as `urls` for high-fidelity style-mimic |
+| **[marp-slide](https://github.com/Gonglitian/agent-skills/tree/main/skills/marp-slide)** | Create professional Marp presentation slides with 7 themes, custom layouts, and auto quality improvements |
+| **[audio-transcribe](https://github.com/Gonglitian/agent-skills/tree/main/skills/audio-transcribe)** | Transcribe audio/video to text using faster-whisper large-v3 with parallel GPU scheduling |
 
 ## Research Workflow
 
