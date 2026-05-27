@@ -1,6 +1,6 @@
 # Agent Skills Collection
 
-A comprehensive collection of Claude Code skills for ML research workflows, covering the full research cycle from literature survey to experiment management.
+A comprehensive collection of **33 Claude Code skills** for ML research workflows, covering the full research cycle from literature survey to experiment management.
 
 ## Installation
 
