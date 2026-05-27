@@ -62,26 +62,6 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[isaaclab-async-pipeline-dev](https://github.com/Gonglitian/agent-skills/tree/main/skills/isaaclab-async-pipeline-dev)** | Async data generation pipeline for Isaac Lab |
 | **[wuyin-gpt-image-2](https://github.com/Gonglitian/agent-skills/tree/main/skills/wuyin-gpt-image-2)** | GPT-Image-2 text-to-image / image edit via 速创API (api.wuyinkeji.com): async submit → poll → download, with 3 paper-figure style presets (UniVLA / Physical Intelligence / Fast-WAM), each shipping curated reference images auto-uploaded to catbox and reused as `urls` for high-fidelity style-mimic |
 
-### Paper Knowledge Base (论文知识库)
-
-Pre-built reference cards for key papers:
-
-| Skill | Paper |
-|-------|-------|
-| [paper_rob__openpi](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__openpi) | Physical Intelligence VLA (pi0, pi0-FAST, pi0.5) |
-| [paper_rob__any3d_vla](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__any3d_vla) | Any3D-VLA: 3D Point Cloud VLA |
-| [paper_rob__3d_diffusion_policy](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__3d_diffusion_policy) | 3D Diffusion Policy |
-| [paper_rob__robocasa](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__robocasa) | RoboCasa simulation |
-| [paper_rob__ibrl](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__ibrl) | IBRL |
-| [paper_rob__idp3](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__idp3) | iDP3 |
-| [paper_rob__resfit](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__resfit) | ResFit |
-| [paper_rob__rdd](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__rdd) | RDD |
-| [paper_rob__bpp](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rob__bpp) | BPP |
-| [paper_rl__dqc](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rl__dqc) | Decoupled Q-Chunking |
-| [paper_rl__qc](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_rl__qc) | Q-Chunking |
-| [paper_3d__concerto](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_3d__concerto) | Concerto 3D encoder |
-| [paper_3d__utonia](https://github.com/Gonglitian/agent-skills/tree/main/skills/papers/paper_3d__utonia) | Utonia 3D generation |
-
 ## Research Workflow
 
 These skills support the full research cycle:

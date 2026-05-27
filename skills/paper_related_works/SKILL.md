@@ -112,7 +112,7 @@ WebSearch: "<paper_title>" cite OR citing 2024 2025 2026
 
 Check the AlphaXiv overview for mentions of follow-up or concurrent work.
 
-**4d. Connected Papers / Papers With Code**
+**4e. Connected Papers / Papers With Code**
 
 ```
 WebSearch: "<paper_title>" site:paperswithcode.com
