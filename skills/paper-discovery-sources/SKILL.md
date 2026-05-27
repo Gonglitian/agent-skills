@@ -1,6 +1,6 @@
 ---
 name: paper-discovery-sources
-description: "Shared reference for all paper search skills. Defines the unified 3-source paper discovery strategy: local vec-db (96K top-venue papers), Semantic Scholar API (200M+ papers + citation graph), and AlphaXiv (free full-text reading). This skill is NOT user-invokable — it is a reference loaded by other skills (research-survey, gap-to-method, paper_related_works, idea_refinery, topic_survey)."
+description: "Shared reference for all paper search skills. Defines the unified 3-source paper discovery strategy: local vec-db (96K top-venue papers), Semantic Scholar API (200M+ papers + citation graph), and AlphaXiv (free full-text reading). This skill is NOT user-invokable — it is a reference loaded by other skills (comprehensive-survey, gap-to-method, paper_related_works, idea_refinery, topic_survey)."
 ---
 
 # Unified Paper Discovery Sources
@@ -75,7 +75,7 @@ wget -q "https://arxiv.org/pdf/<ARXIV_ID>" -O "<ARXIV_ID>.pdf"
 
 ## Recommended Discovery Strategy by Goal
 
-### Goal A: "Survey a topic" (research-survey, topic_survey)
+### Goal A: "Survey a topic" (comprehensive-survey, topic_survey)
 
 ```
 1. Vec-db semantic search (5-8 queries, --top 15 each)     → top-venue papers

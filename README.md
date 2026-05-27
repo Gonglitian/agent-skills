@@ -18,7 +18,8 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 
 | Skill | Description |
 |-------|-------------|
-| **[research-survey](https://github.com/Gonglitian/agent-skills/tree/main/skills/research-survey)** | Deep literature survey: vec-db semantic search + web search + parallel subagent reading → structured report |
+| **[comprehensive-survey](https://github.com/Gonglitian/agent-skills/tree/main/skills/comprehensive-survey)** | Full-spectrum survey: 6 academic sources + 5 social platforms → parallel subagents → structured report with concept glossary |
+| **[topic_survey](https://github.com/Gonglitian/agent-skills/tree/main/skills/topic_survey)** | Interactive field survey: explore sub-topics guided by user, produce a structured literature review / reading list |
 | **[read-paper](https://github.com/Gonglitian/agent-skills/tree/main/skills/read-paper)** | Deep-read papers with VLM figure analysis, parallel subagents, and structured 12-section notes |
 | **[gap-to-method](https://github.com/Gonglitian/agent-skills/tree/main/skills/gap-to-method)** | Multi-dimensional literature matrix → Gap discovery → Evidence-based method proposal |
 | **[idea_refinery](https://github.com/Gonglitian/agent-skills/tree/main/skills/idea_refinery)** | Iteratively refine research ideas through survey, validation, and branching exploration |
@@ -88,7 +89,7 @@ These skills support the full research cycle:
 ```
 idea_refinery → gap-to-method → project-init → auto_experiment → experiment_report
      ↑              ↑                                  ↑
-research-survey  read-paper                    gpu-train-monitor
+comprehensive-survey read-paper                gpu-train-monitor
                                                train-debug
                                                data-pipeline-check
 ```

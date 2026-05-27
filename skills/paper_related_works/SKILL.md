@@ -18,20 +18,9 @@ Given an academic paper, build a comprehensive related-works map covering both *
 
 ### Step 1: Identify the Paper
 
-Parse the paper from user input (arXiv URL, ID, title, PDF path).
+> **检索命令语法的唯一来源**：AlphaXiv 读取、Semantic Scholar citations/references API、vec-db 检索的精确命令、限流与去重规则，统一定义在 `../paper-discovery-sources/SKILL.md`（见其中 Goal C 检索策略）。需要命令细节时加载它；下面只写本 skill 特有的策略。
 
-**Use AlphaXiv skill to read the paper (always try this first):**
-
-1. Extract paper ID from input (see AlphaXiv skill for ID parsing rules)
-2. Fetch machine-readable report:
-   ```
-   WebFetch: https://alphaxiv.org/overview/{PAPER_ID}.md
-   ```
-3. If report lacks detail on references, fetch full text:
-   ```
-   WebFetch: https://alphaxiv.org/abs/{PAPER_ID}.md
-   ```
-4. If both 404, fall back to reading the PDF directly
+Parse the paper from user input (arXiv URL, ID, title, PDF path), then read it via AlphaXiv (overview first, full text if references are thin, PDF fallback on 404) — see the reference doc for the exact commands.
 
 Extract the full paper content for the walkthrough and related works analysis.
 
@@ -101,28 +90,16 @@ For each cited paper, extract:
 
 ### Step 4: Find Successor Works
 
-Search for papers that cite or build on the target paper using multiple sources:
+Search for papers that cite or build on the target paper using multiple sources (exact commands in `../paper-discovery-sources/SKILL.md`):
 
-**4a. Semantic Scholar API (primary)**
-
-```bash
-# Get paper details + citations
-curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:{PAPER_ID}?fields=title,year,citationCount,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
-```
-
-```bash
-# If not found by arXiv ID, search by title
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED_TITLE>&limit=5&fields=title,year,externalIds,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
-```
+**4a. Semantic Scholar API (primary)** — the citation graph gives both directions in one call:
+- **`citations` field → successors** (papers that cite this one): this is the primary signal for Step 4/5.
+- **`references` field → predecessors** (papers this one cites): use this in Step 3 to corroborate/augment the references you pulled from the paper text.
+- If the paper isn't found by arXiv ID, look it up by title first, then fetch its citation graph.
 
 **4b. Local Vec-db semantic search (find related top-venue work)**
 
-```bash
-cd /home/vla-reasoning/proj/litian-research/vec-db
-npx tsx src/cli.ts search "<paper's key concepts>" --top 10
-```
-
-This finds top-venue papers with similar themes that may not directly cite the target but are closely related. Especially useful for discovering parallel/concurrent work.
+Search vec-db with the paper's key concepts. This finds top-venue papers with similar themes that may not directly cite the target but are closely related. Especially useful for discovering parallel/concurrent work.
 
 **4c. Web search (supplementary)**
 
@@ -284,7 +261,7 @@ After presenting the map, ask:
 
 ## Tips
 
-- Semantic Scholar API has rate limits (~100 req/5min for unauthenticated). Space requests if doing bulk lookups.
+- Semantic Scholar API is rate limited (see reference doc); space requests if doing bulk lookups.
 - Papers <6 months old may have few/no citations yet. Rely more on web search for recent successors.
 - Some papers cite predecessors only in supplementary material — check appendices.
 - For very popular papers (>500 citations), filter successors by citation count or recency to keep the map manageable.

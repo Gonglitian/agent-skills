@@ -642,7 +642,6 @@ Suggested next step: /experiment-plan
 This skill sits between idea discovery and execution:
 
 ```
-/research-refine-pipeline              -> one-shot refine + experiment planning
 /idea-creator "direction"       -> candidate ideas
 /research-refine "PROBLEM: ... | APPROACH: ..."  <- you are here
 /experiment-plan                -> detailed experiment roadmap
@@ -655,8 +654,7 @@ Typical flow:
 1. `/idea-creator` or local reading gives you a problem and a vague method direction
 2. `/research-refine` turns that into an anchored, elegant, frontier-aware method plan
 3. `/experiment-plan` turns the final proposal into a detailed claim-driven experiment roadmap
-4. `/research-refine-pipeline` is the one-shot wrapper when the user wants both stages in a single request
-5. `/run-experiment` executes the chosen runs
-6. Later loops operate on results, not just ideas
+4. `/run-experiment` executes the chosen runs
+5. Later loops operate on results, not just ideas
 
 This skill also works standalone if you already know the problem and just need the method to become concrete.

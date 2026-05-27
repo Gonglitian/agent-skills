@@ -167,28 +167,23 @@ Run `/topic_survey` logic on the idea's domain. This builds the shared knowledge
 
 Use the methods from `/paper_related_works` and `/topic_survey` for all paper operations.
 
-**Discover papers:**
+> **检索命令语法的唯一来源**：vec-db / Semantic Scholar / AlphaXiv 的精确命令、限流与去重规则，统一定义在 `../paper-discovery-sources/SKILL.md`（见其中 Goal D 检索策略）。需要命令细节时加载它；下面只写本 skill 特有的策略。
+
+**Discover papers** (commands live in the shared doc above):
 
 | Method | When to Use | How |
 |--------|------------|-----|
-| **Local Vec-db** | Precision search in 96K top-venue papers | `cd /home/vla-reasoning/proj/litian-research/vec-db && npx tsx src/cli.ts search "<QUERY>" --top 15` |
-| Semantic Scholar API | Keyword search, citation graph (200M+ papers) | `curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"` |
-| Semantic Scholar (recent) | Find cutting-edge work | Same but add `&year=2024-2026` |
-| Semantic Scholar (citations) | Find successors of a paper | `.../paper/ArXiv:{ID}?fields=citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount` |
+| **Local Vec-db** | Precision search in 96K top-venue papers | 见公共文档（vec-db search） |
+| Semantic Scholar API | Keyword search, citation graph (200M+ papers) | 见公共文档（keyword search） |
+| Semantic Scholar (recent) | Find cutting-edge work | 见公共文档（`year=2024-2026`） |
+| Semantic Scholar (citations) | Find successors of a paper | 见公共文档（citations API） |
 | Web search | Broad sweep, surveys | `WebSearch: "<topic>" site:arxiv.org` |
 | Papers With Code | Find benchmarks, code | `WebSearch: "<topic>" site:paperswithcode.com` |
 | Citation chain | Trace research lineage | From papers already in cache, follow references + citing papers (see `/paper_related_works` Steps 3-4) |
 
 **Recommended order**: Vec-db first (fast, top-venue) → Semantic Scholar (broader, with citation counts) → Web search (latest preprints). Deduplicate across sources by title.
 
-**Read papers** via AlphaXiv (always try first for any arXiv paper):
-
-```
-WebFetch: https://alphaxiv.org/overview/{PAPER_ID}.md    # structured overview (fast)
-WebFetch: https://alphaxiv.org/abs/{PAPER_ID}.md         # full text (if overview lacks detail)
-```
-
-If AlphaXiv returns 404, fall back to reading the PDF directly.
+**Read papers** via AlphaXiv (always try first for any arXiv paper; exact `WebFetch` syntax and PDF fallback are in the shared doc). Use the structured overview first, fall back to full text, then to the PDF on 404.
 
 **For key papers** (foundations the idea builds on, main competitors): use `/paper_related_works` logic to map their predecessors and successors — this surfaces papers that keyword search misses.
 

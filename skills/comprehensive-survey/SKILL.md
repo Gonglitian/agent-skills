@@ -133,25 +133,25 @@ For each topic, spawn 3 types of agents simultaneously:
 
 ### Agent Type A: Academic Paper Search (one per topic)
 
-Each agent performs multi-source paper search:
+Each agent performs multi-source paper search.
+
+> **检索命令语法的唯一来源**:vec-db / Semantic Scholar / AlphaXiv 的精确命令、限流与去重规则,统一定义在 `../paper-discovery-sources/SKILL.md`。需要命令细节时加载它;下面只写本 skill 特有的检索策略。
 
 **Prompt template:**
 ```
-You are a research paper search specialist. Search for papers on "<TOPIC>" using ALL of the following sources:
+You are a research paper search specialist. Search for papers on "<TOPIC>" using ALL of the following sources.
+(Exact command syntax for vec-db / Semantic Scholar / AlphaXiv: see ../paper-discovery-sources/SKILL.md.)
 
 ## Source 1: Vec-db Semantic Search
-Run 6-8 diverse semantic queries in parallel:
-cd <VECDB_PATH> && npx tsx src/cli.ts search "<query>" --top 15
-
-Query design:
+Run 6-8 diverse semantic queries in parallel (command: see public doc).
+Query design specific to this survey:
 - Mix high-level conceptual + specific technical queries
 - Use English (embeddings are English-centric)
 - Cover adjacent areas, not just exact matches
 
 ## Source 2: Semantic Scholar API
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
-Also search recent papers: &year=2024-2026
-Run 2-3 keyword variants. If 429, wait 3s and retry once.
+Run 2-3 keyword variants (keyword + recent-papers + sort-by-citation forms: see public doc).
+If 429, wait 3s and retry once.
 
 ## Source 3: WebSearch
 Search for: "<topic> arXiv 2024 2025 survey", "<topic> NeurIPS ICML ICLR 2024 2025", etc.
@@ -394,51 +394,11 @@ Entry point: <output_dir>/README.md
 
 ## Search Source Reference
 
-### Vec-db (Precision — top-venue papers)
+> **三大学术检索源(vec-db / Semantic Scholar / AlphaXiv)的精确命令、限流与去重规则,统一见 `../paper-discovery-sources/SKILL.md`,此处不再复制。** 下面只列本 skill 特有的源(社交平台 / WebSearch / Brave)。
 
-```bash
-cd <VECDB_PATH>
-npx tsx src/cli.ts search "<query>" --top 15
-npx tsx src/cli.ts status  # check paper count
-```
-
-**Tips:**
-- Run 5-8 diverse queries per topic (different angles)
-- Use English queries (embeddings are English-centric)
-- Score > 0.25 is relevant; > 0.35 is highly relevant
-- Results include title, venue, year, abstract — NOT arXiv ID (look up separately)
-- Run ALL queries in parallel (multiple Bash calls in one message)
-
-### Semantic Scholar API (Breadth — 200M+ papers)
-
-**Keyword search (by citation count):**
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
-```
-
-**Recent papers:**
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&year=2024-2026"
-```
-
-**Citation graph (successors):**
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,citationCount,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
-```
-
-**Rate limit:** 5000 req/5min unauthenticated. Space 0.5s apart for bulk queries.
-
-### AlphaXiv (Paper Reading — free full text)
-
-```
-# Structured overview (try first)
-WebFetch: https://alphaxiv.org/overview/<ARXIV_ID>.md
-
-# Full text (if overview insufficient)
-WebFetch: https://alphaxiv.org/abs/<ARXIV_ID>.md
-```
-
-Fallback: `wget https://arxiv.org/pdf/<ID> -O <ID>.pdf`
+- **Vec-db** (Precision — top-venue papers):本 skill 每个 topic 跑 5-8 条不同角度的英文 query,`--top 15`;score > 0.25 视为相关。命令见公共文档。
+- **Semantic Scholar API** (Breadth — 200M+ papers):本 skill 每个 topic 跑 2-3 个关键词变体(含 sort-by-citation 与 recent-papers 两种形式)。命令与限流见公共文档。
+- **AlphaXiv** (Paper Reading — free full text):需要读全文时,先 overview 后 abs,404 回退 PDF。命令见公共文档。
 
 ### WebSearch (Cutting-edge + blogs)
 

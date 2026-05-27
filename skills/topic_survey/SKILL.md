@@ -43,49 +43,21 @@ Define:
 
 ### Step 2: Initial Exploration
 
+> **检索命令语法的唯一来源**:vec-db / Semantic Scholar / AlphaXiv 的精确命令、限流与去重规则,统一定义在 `../paper-discovery-sources/SKILL.md`。需要命令细节时加载它;下面只写本 skill 特有的检索策略。
+
 #### 2a. Search for foundational and recent papers
 
-Use multiple search strategies in parallel (three sources for comprehensive coverage):
+Run all three sources in parallel for comprehensive coverage. This skill's particular strategy:
 
-**Local Vec-db (96K top-venue papers — search first for precision):**
-
-```bash
-cd /home/vla-reasoning/proj/litian-research/vec-db
-npx tsx src/cli.ts search "<topic query>" --top 15
-# Run 3-5 queries from different angles
-```
-
-Vec-db only contains accepted top-venue papers (CoRL, ICRA, IROS, RSS, NeurIPS, etc.), so results are high quality but may miss recent preprints. Combine with Semantic Scholar and web search below.
-
-**Semantic Scholar (200M+ papers — broadest coverage):**
-
-```bash
-# Search by topic keywords
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<TOPIC_KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
-
-# Also search for recent papers (high relevance, lower citations)
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<TOPIC_KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&year=2024-2026"
-```
-
-**Web search:**
-
-```
-WebSearch: "<topic>" survey OR review site:arxiv.org
-WebSearch: "<topic>" state of the art 2025 2026 site:arxiv.org
-WebSearch: "<topic>" benchmark comparison site:paperswithcode.com
-```
-
-**AlphaXiv (primary method for reading any paper with an arXiv ID):**
-
-Use the AlphaXiv skill for all paper reading. For each paper with an arXiv ID:
-
-```
-# Structured overview (try first)
-WebFetch: https://alphaxiv.org/overview/{PAPER_ID}.md
-
-# Full text (if overview lacks needed detail)
-WebFetch: https://alphaxiv.org/abs/{PAPER_ID}.md
-```
+- **Vec-db** — fire 3-5 queries from *different angles* on the topic (synonyms, sub-areas, adjacent fields). High-precision top-venue results; won't catch recent preprints.
+- **Semantic Scholar** — run two passes per topic: one sorted by citation count (find the classics), one filtered to recent years (find emerging work the citation sort would bury).
+- **Web search** — target surveys/reviews, state-of-the-art roundups, and benchmark-comparison pages to quickly map the landscape, e.g.:
+  ```
+  WebSearch: "<topic>" survey OR review site:arxiv.org
+  WebSearch: "<topic>" state of the art 2025 2026 site:arxiv.org
+  WebSearch: "<topic>" benchmark comparison site:paperswithcode.com
+  ```
+- **AlphaXiv** — read any candidate paper that has an arXiv ID (overview first, full text only if needed).
 
 **From seed papers:**
 
@@ -133,12 +105,7 @@ Based on user direction, go deeper into selected sub-topics.
 
 **For each priority sub-topic:**
 
-1. **Read key papers** using AlphaXiv skill (always try AlphaXiv first, fall back to PDF):
-   ```
-   WebFetch: https://alphaxiv.org/overview/{PAPER_ID}.md
-   # If more detail needed:
-   WebFetch: https://alphaxiv.org/abs/{PAPER_ID}.md
-   ```
+1. **Read key papers** via AlphaXiv (overview first, full text if needed, PDF fallback — see `../paper-discovery-sources/SKILL.md` for the exact commands).
 
 2. **Extract per-paper notes:**
    - Problem addressed
