@@ -2,8 +2,8 @@
 name: comprehensive-survey
 description: >
   Full-spectrum research survey pipeline: given a topic (or multiple related topics), orchestrates
-  parallel searches across 6 information sources (local vec-db, Semantic Scholar API, WebSearch/arXiv,
-  social platforms via MediaCrawler + WebSearch, AlphaXiv paper reading, Brave Search), then produces
+  parallel searches across 5 information sources (local vec-db, Semantic Scholar API, WebSearch/arXiv,
+  social platforms via WebSearch site: filters, AlphaXiv paper reading, Brave Search), then produces
   structured survey reports with paper citations, social media insights, and concept glossary documents
   with pseudocode. Use PROACTIVELY whenever the user wants a comprehensive literature survey,
   topic investigation, "全面调研", "综合调研", "survey this topic", "调研一下", "research survey",
@@ -14,8 +14,8 @@ description: >
 
 # Comprehensive Research Survey Pipeline
 
-Orchestrate a full-spectrum research investigation combining **academic paper search** (6 sources) and
-**social media gathering** (5 platforms: B站/知乎/X/Reddit/Tech Blogs) into structured, cross-referenced survey reports with concept
+Orchestrate a full-spectrum research investigation combining **academic paper search** (vec-db, Semantic Scholar, WebSearch/arXiv, AlphaXiv, Brave Search) and
+**social media gathering** (5 platforms via WebSearch `site:` filters: B站/知乎/X/Reddit/Tech Blogs) into structured, cross-referenced survey reports with concept
 glossary and pseudocode.
 
 This skill produces the same quality and structure as a manual month-long literature review, but in
@@ -31,7 +31,7 @@ Before any search, verify all required infrastructure. Run these checks **in par
 ### 0.1 Vec-db (REQUIRED)
 
 ```bash
-cd ${VECDB_PATH:-/home/vla-reasoning/proj/litian-research/vec-db} && npx tsx src/cli.ts status
+cd ${VECDB_PATH:-/home/vla-reasoning/proj/vec-db} && npx tsx src/cli.ts status
 ```
 
 If this fails, **stop and ask the user**:
@@ -39,47 +39,24 @@ If this fails, **stop and ask the user**:
 
 Store the path for later use. The vec-db should report 60K+ papers. If it reports 0, the index may not be built — tell the user to run `npx tsx src/cli.ts index`.
 
-### 0.2 MediaCrawler (REQUIRED for social platforms)
-
-```bash
-# Check if MediaCrawler exists at common locations
-for p in "${MEDIACRAWLER_PATH}" "/home/$(whoami)/MediaCrawler" "/data1/$(whoami)/MediaCrawler"; do
-  [ -d "$p" ] && [ -f "$p/main.py" ] && echo "FOUND: $p" && break
-done
-```
-
-If not found, **stop and ask the user**:
-> "MediaCrawler is required for social platform search (Bilibili etc.). Please provide the path to your MediaCrawler installation, or read the installation guide: `references/mediacrawler_setup.md`"
-
-Check if MediaCrawler venv exists and has playwright:
-```bash
-cd <MediaCrawler_path> && source venv/bin/activate && python -c "import playwright; print('OK')" 2>/dev/null
-```
-
-### 0.3 Semantic Scholar API (auto-available)
+### 0.2 Semantic Scholar API (auto-available)
 
 ```bash
 curl -s --max-time 5 "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=1&fields=title" | head -1
 ```
 
-If 429 (rate limited), note it — will use with delay or skip gracefully.
+If 429 (rate limited), note it — it is usually transient: wait 3-5s and retry. If persistently 429, use with delay or skip gracefully.
 
-### 0.4 Brave Search MCP (optional enhancement)
+### 0.3 Brave Search MCP (optional enhancement)
 
 Check if `mcp__brave-search__brave_web_search` is available. If not, WebSearch will be used as fallback for all web searches.
-
-### 0.5 Crawl4AI MCP (optional enhancement)
-
-Check if `mcp__crawl4ai__scrape` is available. If not, WebFetch will be used as fallback for page scraping.
 
 **Summary**: After checks, report to user:
 ```
 Environment check:
   ✓ Vec-db: <path> (<N> papers)
-  ✓ MediaCrawler: <path>
   ✓/✗ Semantic Scholar API
   ✓/✗ Brave Search MCP
-  ✓/✗ Crawl4AI MCP
 ```
 
 ---
@@ -133,25 +110,25 @@ For each topic, spawn 3 types of agents simultaneously:
 
 ### Agent Type A: Academic Paper Search (one per topic)
 
-Each agent performs multi-source paper search.
-
-> **检索命令语法的唯一来源**:vec-db / Semantic Scholar / AlphaXiv 的精确命令、限流与去重规则,统一定义在 `../paper-discovery-sources/SKILL.md`。需要命令细节时加载它;下面只写本 skill 特有的检索策略。
+Each agent performs multi-source paper search:
 
 **Prompt template:**
 ```
-You are a research paper search specialist. Search for papers on "<TOPIC>" using ALL of the following sources.
-(Exact command syntax for vec-db / Semantic Scholar / AlphaXiv: see ../paper-discovery-sources/SKILL.md.)
+You are a research paper search specialist. Search for papers on "<TOPIC>" using ALL of the following sources:
 
 ## Source 1: Vec-db Semantic Search
-Run 6-8 diverse semantic queries in parallel (command: see public doc).
-Query design specific to this survey:
+Run 6-8 diverse semantic queries in parallel:
+cd <VECDB_PATH> && npx tsx src/cli.ts search "<query>" --top 15
+
+Query design:
 - Mix high-level conceptual + specific technical queries
 - Use English (embeddings are English-centric)
 - Cover adjacent areas, not just exact matches
 
 ## Source 2: Semantic Scholar API
-Run 2-3 keyword variants (keyword + recent-papers + sort-by-citation forms: see public doc).
-If 429, wait 3s and retry once.
+curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
+Also search recent papers: &year=2024-2026
+Run 2-3 keyword variants. If 429, wait 3s and retry once.
 
 ## Source 3: WebSearch
 Search for: "<topic> arXiv 2024 2025 survey", "<topic> NeurIPS ICML ICLR 2024 2025", etc.
@@ -174,19 +151,13 @@ Also write <output_dir>/<topic>/vecdb_papers.md with the raw vec-db results tabl
 ```
 Search social platforms and the web for discussions about "<TOPIC>".
 
-## Platform 1: Bilibili (B站) — via MediaCrawler
-cd <MEDIACRAWLER_PATH>
-source venv/bin/activate
-./crawl.sh bili "<中文关键词>" 20
+## Platform 1: Bilibili (B站) — via WebSearch
+WebSearch: "<中文关键词> site:bilibili.com"
+WebSearch: "<topic> B站 视频 讲解"
 
-If crawl.sh doesn't exist, run directly:
-python main.py --platform bili --lt cookie --type search --keywords "<关键词>"
-
-Read the JSON output from the data directory.
-
-## Platform 2: Zhihu (知乎) — via WebSearch + WebFetch
+## Platform 2: Zhihu (知乎) — via WebSearch
 WebSearch: "<topic> site:zhihu.com"
-For top results, WebFetch the full content (may 403, use search snippets as fallback).
+Note: WebFetch on zhihu.com returns 403 — rely on search snippets only.
 
 ## Platform 3: X/Twitter — via WebSearch
 WebSearch: "<english topic> site:x.com 2024 2025"
@@ -394,29 +365,57 @@ Entry point: <output_dir>/README.md
 
 ## Search Source Reference
 
-> **三大学术检索源(vec-db / Semantic Scholar / AlphaXiv)的精确命令、限流与去重规则,统一见 `../paper-discovery-sources/SKILL.md`,此处不再复制。** 下面只列本 skill 特有的源(社交平台 / WebSearch / Brave)。
+### Vec-db (Precision — top-venue papers)
 
-- **Vec-db** (Precision — top-venue papers):本 skill 每个 topic 跑 5-8 条不同角度的英文 query,`--top 15`;score > 0.25 视为相关。命令见公共文档。
-- **Semantic Scholar API** (Breadth — 200M+ papers):本 skill 每个 topic 跑 2-3 个关键词变体(含 sort-by-citation 与 recent-papers 两种形式)。命令与限流见公共文档。
-- **AlphaXiv** (Paper Reading — free full text):需要读全文时,先 overview 后 abs,404 回退 PDF。命令见公共文档。
+```bash
+cd <VECDB_PATH>
+npx tsx src/cli.ts search "<query>" --top 15
+npx tsx src/cli.ts status  # check paper count
+```
+
+**Tips:**
+- Run 5-8 diverse queries per topic (different angles)
+- Use English queries (embeddings are English-centric)
+- Score > 0.25 is relevant; > 0.35 is highly relevant
+- Results include title, venue, year, abstract — NOT arXiv ID (look up separately)
+- Run ALL queries in parallel (multiple Bash calls in one message)
+
+### Semantic Scholar API (Breadth — 200M+ papers)
+
+**Keyword search (by citation count):**
+```bash
+curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
+```
+
+**Recent papers:**
+```bash
+curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&year=2024-2026"
+```
+
+**Citation graph (successors):**
+```bash
+curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,citationCount,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
+```
+
+**Rate limit:** 5000 req/5min unauthenticated. Space 0.5s apart for bulk queries.
+
+### AlphaXiv (Paper Reading — free full text)
+
+**Note: WebFetch on alphaxiv.org returns 403 — use curl with a browser User-Agent instead:**
+
+```bash
+# Structured overview (try first)
+curl -sL -A "Mozilla/5.0" "https://www.alphaxiv.org/overview/<ARXIV_ID>.md"
+
+# Full text (if overview insufficient)
+curl -sL -A "Mozilla/5.0" "https://www.alphaxiv.org/abs/<ARXIV_ID>.md"
+```
+
+Fallback: `wget https://arxiv.org/pdf/<ID> -O <ID>.pdf` (arxiv.org works fine with WebFetch too)
 
 ### WebSearch (Cutting-edge + blogs)
 
 Use for: latest arXiv preprints, tech blogs, social platforms via `site:` filters, Google Scholar-indexed papers.
-
-### MediaCrawler (Bilibili)
-
-```bash
-cd <MEDIACRAWLER_PATH>
-source venv/bin/activate
-
-# Bilibili search
-python main.py --platform bili --lt cookie --type search --keywords "<关键词>"
-```
-
-Data output: JSON files in the configured data directory.
-
-If MediaCrawler is not available or cookies are expired, fall back to WebSearch with `site:bilibili.com`.
 
 ### Brave Search MCP (enhanced web search, if available)
 
@@ -432,11 +431,11 @@ mcp__brave-search__brave_local_search: "<query>"  # for local/business results
 | Issue | Cause | Fix |
 |-------|-------|-----|
 | Vec-db returns 0 results | Wrong path or unbuilt index | Verify path; run `npx tsx src/cli.ts status` |
-| Semantic Scholar 429 | Rate limited | Wait 60s, retry; or skip and rely on vec-db + WebSearch |
-| MediaCrawler login failed | Cookie expired | User must re-export cookies from browser |
+| Semantic Scholar 429 | Rate limited (often transient) | Wait 3-5s and retry; if persistent, rely on vec-db + WebSearch |
+| AlphaXiv 403 via WebFetch | Blocks non-browser clients | Use `curl -sL -A "Mozilla/5.0"` instead |
 | AlphaXiv 404 | Paper not indexed | Fall back to PDF download |
 | Subagent timeout | Too much work per agent | Split into smaller tasks per agent |
-| WebFetch 403 on Zhihu | Server blocks bots | Use search snippets; try Crawl4AI if available |
+| WebFetch 403 on Zhihu | Server blocks bots | Use search snippets only |
 
 ---
 
@@ -444,6 +443,6 @@ mcp__brave-search__brave_local_search: "<query>"  # for local/business results
 
 | Preset | Papers/topic | Concepts | Vec-db queries | Social platforms | Report lines |
 |--------|-------------|----------|----------------|-----------------|-------------|
-| quick | ~15 | 5 | 3-4 | WebSearch only | 500+ |
-| standard | ~30-50 | 10-15 | 6-8 | All (MediaCrawler + WebSearch) | 800+ |
-| deep | ~50-100 | 15-20 | 8-10 | All + deep fetch | 1000+ |
+| quick | ~15 | 5 | 3-4 | Skip or 1-2 WebSearch | 500+ |
+| standard | ~30-50 | 10-15 | 6-8 | All 5 via WebSearch site: filters | 800+ |
+| deep | ~50-100 | 15-20 | 8-10 | All 5 + AlphaXiv deep fetch | 1000+ |
