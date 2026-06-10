@@ -21,6 +21,7 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import Optional
 
 SUBMIT_URL = "https://api.wuyinkeji.com/api/async/image_gpt"
 DETAIL_URL = "https://api.wuyinkeji.com/api/async/detail"
@@ -37,7 +38,7 @@ VALID_SIZES = {
 VALID_STYLES = ("univla", "physical_intelligence", "fast_wam")
 
 
-def load_key(cli_key: str | None) -> str:
+def load_key(cli_key: Optional[str]) -> str:
     if cli_key:
         return cli_key.strip()
     env = os.environ.get("WUYINKEJI_API_KEY")
@@ -51,7 +52,7 @@ def load_key(cli_key: str | None) -> str:
     )
 
 
-def http_json(method: str, url: str, key: str, body: dict | None = None) -> dict:
+def http_json(method: str, url: str, key: str, body: Optional[dict] = None) -> dict:
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(
         url, data=data, method=method,

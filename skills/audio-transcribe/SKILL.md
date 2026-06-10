@@ -157,15 +157,63 @@ Each audio file produces three outputs:
 
 Batch runs also produce `batch_summary_*.json` with timing stats.
 
-## Post-Processing with LLM
+## Post-Processing with LLM (context-aware polish)
 
-After transcription, optionally polish with an LLM agent to:
-- Fix domain terminology (e.g., "face solubility" → "phase solubility")
-- Remove Whisper hallucinations ("Thank you for watching")
-- Add topic section headers
-- Standardize formatting
+After transcription, Claude should polish the raw `*_transcript.txt` into a `*_final.txt` **inline in the current session** (or via a dispatched subagent for long files). Do NOT shell out to `claude -p` or build a polish CLI — run the pass directly.
 
-Ask Claude to read the `*_transcript.txt` and produce a `*_final.txt`.
+### When to run the polish
+
+Trigger automatically when any of the following apply to a just-produced transcript:
+- `language_probability < 0.95` in the metadata header (suggests rough ASR)
+- The user supplied a `--context` to `transcribe.py` (they care about domain terms)
+- The user explicitly asks ("润色一下", "polish", "clean up", "fix the transcript")
+
+When unsure, surface the offer instead of running silently — polishing takes real tokens.
+
+### Execution routing
+
+| Transcript size | Approach |
+|---|---|
+| ≤ 200 segments (≈ ≤15 min audio) | Read + rewrite inline with Edit/Write |
+| > 200 segments OR > ~6k tokens of text | Dispatch a `general-purpose` Agent with the rules below, run in the foreground so you can verify output, and have it write `*_final.txt` directly |
+| Batch of many files | Dispatch one Agent per file in parallel (single message, multiple tool calls) |
+
+### Polish rules (give these to yourself or the subagent verbatim)
+
+```
+You are editing a raw ASR transcript. Fix obvious errors ONLY. Never add content.
+
+HARD RULES:
+1. Preserve every `[MM:SS-MM:SS]` timestamp line-by-line. Do not merge or split segments. Do not reorder.
+2. Preserve the metadata header (lines starting with `#`) unchanged. Append one line:
+   `# polished_by=<model>  context=<domain terms used>`
+3. Only these edits are allowed:
+   a. Homophone / near-homophone ASR errors that context makes unambiguous
+      (e.g., zh: "正与以前" → "正余弦"; en: "face solubility" → "phase solubility").
+   b. Domain terms in the provided context list — snap misspellings to the canonical form.
+   c. Remove stock Whisper hallucinations inserted into unrelated audio
+      ("Thank you for watching", "请订阅我的频道", "字幕由...提供", repeated tail phrases
+       on silence). If the phrase plausibly belongs to the content, LEAVE IT.
+   d. Fix punctuation / spacing if it improves readability. No paraphrasing.
+4. If a segment is already correct, output it character-for-character unchanged.
+5. When in doubt, prefer the original. Under-editing is safer than over-editing.
+6. Do NOT add summaries, section headers, speaker labels, or commentary.
+
+INPUT: the raw transcript text (header + timestamped lines).
+OUTPUT: the same file, polished per the rules above. Nothing else.
+
+Domain context: <paste the --context value, or extract domain hints from the audio title>
+```
+
+### After polishing — always report the diff
+
+After writing `*_final.txt`, run `diff` against the raw `*_transcript.txt` and summarize the changes to the user in 3-5 bullets (e.g., "fixed 正与以前 → 正余弦 at 03:13; removed 1 'thank you for watching' hallucination at end"). This keeps the edit auditable — the user can reject specific changes.
+
+### What polish does NOT do
+
+- No section headers, no TL;DR, no reorganization — that's a separate summarization step.
+- No translation.
+- No speaker diarization — Whisper doesn't produce speaker IDs, the polish pass won't fabricate them.
 
 ## Data Path Management
 
@@ -176,9 +224,9 @@ Ask Claude to read the `*_transcript.txt` and produce a `*_final.txt`.
 │   ├── *_transcript.txt
 │   ├── *_transcript.json
 │   ├── *_transcript.srt
-│   └── batch_summary_*.json
-├── bili/               ← B站 specific transcripts
-└── *_final.txt         ← LLM-polished versions
+│   ├── batch_summary_*.json
+│   └── *_final.txt     ← Claude-polished versions (see Post-Processing section)
+└── bili/               ← B站 specific transcripts
 ```
 
 ## Performance Reference
@@ -197,6 +245,8 @@ Ask Claude to read the `*_transcript.txt` and produce a `*_final.txt`.
 |-------|-------|-----|
 | `CUDA out of memory` | GPU occupied | Use `--gpus` to select free GPUs; or use `--compute-type int8` |
 | Model download slow | Large file (2.9GB) | Set `HF_TOKEN` for faster auth download |
-| "Thank you for watching" in output | Whisper hallucination on silence | Use `--context` to bias; post-process with LLM |
+| "Thank you for watching" in output | Whisper hallucination on silence | Use `--context` to bias; run Post-Processing polish step |
+| Polish pass adds content not in source | Over-zealous LLM | Tighten the HARD RULES prompt; re-run with "under-edit" emphasis; reject and keep raw |
+| Polish pass drops timestamps / merges segments | LLM ignored format rule | Re-run with smaller chunks; pass one segment block at a time |
 | Poor Chinese recognition | Wrong model | Use `large-v3` (not tiny/base); set `--language zh` |
 | Parallel slower than serial | All files short (<10min) | Model load overhead dominates; use single GPU for short files |

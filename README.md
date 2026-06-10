@@ -84,7 +84,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[isaaclab-async-pipeline-dev](https://github.com/Gonglitian/agent-skills/tree/main/skills/isaaclab-async-pipeline-dev)** | Async data generation pipeline for Isaac Lab |
 | **[wuyin-gpt-image-2](https://github.com/Gonglitian/agent-skills/tree/main/skills/wuyin-gpt-image-2)** | GPT-Image-2 text-to-image / image edit via 速创API (api.wuyinkeji.com): async submit → poll → download, with 3 paper-figure style presets (UniVLA / Physical Intelligence / Fast-WAM), each shipping curated reference images auto-uploaded to catbox and reused as `urls` for high-fidelity style-mimic |
 | **[marp-slide](https://github.com/Gonglitian/agent-skills/tree/main/skills/marp-slide)** | Create professional Marp presentation slides with 7 themes, custom layouts, and auto quality improvements |
-| **[audio-transcribe](https://github.com/Gonglitian/agent-skills/tree/main/skills/audio-transcribe)** | Transcribe audio/video to text using faster-whisper large-v3 with parallel GPU scheduling |
+| **[audio-transcribe](https://github.com/Gonglitian/agent-skills/tree/main/skills/audio-transcribe)** | Transcribe audio/video to text: faster-whisper large-v3 with parallel CUDA scheduling + mlx-whisper counterpart for Apple Silicon (Metal), plus a context-aware LLM polish pass (auto-triggered, timestamp-preserving) |
 
 ### Obsidian (笔记系统)
 
