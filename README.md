@@ -1,6 +1,6 @@
 # Agent Skills Collection
 
-A comprehensive collection of **33 Claude Code skills** for ML research workflows, covering the full research cycle from literature survey to experiment management.
+A comprehensive collection of **45 Claude Code skills** for ML research workflows, covering the full research cycle from literature survey to experiment management.
 
 ## Installation
 
@@ -32,6 +32,15 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[multi-platform-search](https://github.com/Gonglitian/agent-skills/tree/main/skills/multi-platform-search)** | Cross-platform info gathering from Xiaohongshu, Bilibili, Zhihu, and X/Twitter simultaneously |
 | **[notion-paper-table](https://github.com/Gonglitian/agent-skills/tree/main/skills/notion-paper-table)** | Build a structured literature survey database in Notion with paper metadata |
 | **[paper-discovery-sources](https://github.com/Gonglitian/agent-skills/tree/main/skills/paper-discovery-sources)** | Shared 3-source paper-discovery reference (vec-db / Semantic Scholar / AlphaXiv) loaded by other skills — not user-invokable |
+| **[arxiv-deepdive](https://github.com/Gonglitian/agent-skills/tree/main/skills/arxiv-deepdive)** | Code-grounded paper deep-dive: arXiv PDF + official repo shallow-clone (fetch.sh, size-capped) → 01_highlevel (core idea) + 02_technical (training/inference details pinned to file:line, runnable commands, repro pitfalls); flags paper-vs-code mismatches, batch fan-out with INDEX.md |
+
+### Paper Knowledge Base (论文知识库)
+
+| Skill | Description |
+|-------|-------------|
+| **[omnibox-search](https://github.com/Gonglitian/agent-skills/tree/main/skills/omnibox-search)** | Semantic search over 965 paper reports + 353 video transcripts: full-report chunk index (29k+, bge-m3 + sqlite-vec) → top-k with hit section + note path, topic/受控 tag filters (expects local OmniBox KB at ~/proj/omnibox) |
+| **[omnibox-sync](https://github.com/Gonglitian/agent-skills/tree/main/skills/omnibox-sync)** | Token-minimal incremental sync of an OmniBox (小黑) public share: metadata-only diff (id + updated_at) vs persistent snapshot → fetch content for delta only → JSON + MD delta files (new / changed / removed) — ingestion stage feeding arxiv-deepdive |
+| **[omnibox-video](https://github.com/Gonglitian/agent-skills/tree/main/skills/omnibox-video)** | Video 预阅读 pipeline: OmniBox share 里的 B站/小红书 videos → audio download (yt-dlp + XHS-Downloader signed API) → faster-whisper GPU transcription → mine spoken arXiv papers (ASR name correction) → dedupe vs existing KB → arxiv-deepdive reports + INDEX; chains omnibox-sync + audio-transcribe + arxiv-deepdive |
 
 ### Experiment Management (实验管理)
 
@@ -43,6 +52,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[train-debug](https://github.com/Gonglitian/agent-skills/tree/main/skills/train-debug)** | Systematic training diagnosis: OOM, NaN gradients, loss plateau, multi-GPU issues |
 | **[data-pipeline-check](https://github.com/Gonglitian/agent-skills/tree/main/skills/data-pipeline-check)** | Dataset validation, schema checks, quality metrics, and compatibility verification |
 | **[weights-and-biases](https://github.com/Gonglitian/agent-skills/tree/main/skills/weights-and-biases)** | Track ML experiments with W&B: auto-logging, real-time visualization, hyperparameter sweeps, model registry |
+| **[evidence-report](https://github.com/Gonglitian/agent-skills/tree/main/skills/evidence-report)** | KDA measurement layer: Measure → Diagnose → Plan, never guess — immutable profile/\<run\>/ dirs + aggregate.py (mean±stddev, baseline delta) + 5 analysis dimensions + signal→cause→fix playbook → 2–4 recommendations ranked by evidence × impact |
 
 ### Engineering (代码工程)
 
@@ -53,6 +63,9 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[tmux-workspace](https://github.com/Gonglitian/agent-skills/tree/main/skills/tmux-workspace)** | Generate tmuxinator configs for multi-project terminal workspaces |
 | **[ucr_hpcc_cluster](https://github.com/Gonglitian/agent-skills/tree/main/skills/ucr_hpcc_cluster)** | Work with the UCR HPCC cluster: connecting, job submission, software management, data storage |
 | **[ghostty-cjk-input-debug](https://github.com/Gonglitian/agent-skills/tree/main/skills/ghostty-cjk-input-debug)** | Diagnose and fix CJK input-method issues in Ghostty terminal on Linux (snap + fcitx5 + GTK4) |
+| **[kda](https://github.com/Gonglitian/agent-skills/tree/main/skills/kda)** | KDA (Kernel Design Agents) orchestration entry point: engineering-loop (control) + domain-wiki (knowledge) + evidence-report (measurement) → Task Contract → correctness-first → evidence-guided optimization → per-regime specialization → promotion, with anti-reward-hacking guards |
+| **[engineering-loop](https://github.com/Gonglitian/agent-skills/tree/main/skills/engineering-loop)** | KDA-style long-horizon optimization harness: task contract → draft/plan → one-candidate-at-a-time iterate → promote; immutable baseline + candidates.jsonl DAG (helper script) + benchmark.csv + 3-phase search + anti-reward-hacking guards |
+| **[domain-wiki](https://github.com/Gonglitian/agent-skills/tree/main/skills/domain-wiki)** | Provenance-tracked domain knowledge base: sources → atomic entries (verbatim quote + source_ref + date + confidence) → 4-axis query (tag/type/source/symptom) + staleness check via 2 stdlib-only scripts; knowledge layer of the KDA loop |
 
 ### Meta (元技能)
 
@@ -61,6 +74,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[skill-creator](https://github.com/Gonglitian/agent-skills/tree/main/skills/skill-creator)** | Create new skills, run evals, benchmark variance, optimize descriptions for triggering accuracy |
 | **[find-skills](https://github.com/Gonglitian/agent-skills/tree/main/skills/find-skills)** | Discover and install skills from the open agent-skills ecosystem (skills.sh) |
 | **[planning-with-files](https://github.com/Gonglitian/agent-skills/tree/main/skills/planning-with-files)** | Manus-style file-based planning (task_plan.md / findings.md / progress.md) for complex multi-step tasks |
+| **[long-horizon-spec](https://github.com/Gonglitian/agent-skills/tree/main/skills/long-horizon-spec)** | 协作式 Plan Mode for long tasks: refine intent → read-only exploration → multi-round AskUserQuestion interview → runnable acceptance checks → SPEC.md hard gate (user must approve) → pick autonomy engine (/goal, Stop hook, Dynamic Workflow, or engineering-loop handoff) + adversarial final review |
 
 ### Domain-Specific (领域专用)
 
@@ -72,6 +86,14 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[marp-slide](https://github.com/Gonglitian/agent-skills/tree/main/skills/marp-slide)** | Create professional Marp presentation slides with 7 themes, custom layouts, and auto quality improvements |
 | **[audio-transcribe](https://github.com/Gonglitian/agent-skills/tree/main/skills/audio-transcribe)** | Transcribe audio/video to text using faster-whisper large-v3 with parallel GPU scheduling |
 
+### Obsidian (笔记系统)
+
+| Skill | Description |
+|-------|-------------|
+| **[obsidian-markdown](https://github.com/Gonglitian/agent-skills/tree/main/skills/obsidian-markdown)** | Obsidian Flavored Markdown authoring: wikilinks + embeds (notes/images/PDF/audio/search) + 13 callout types + YAML properties + tags/comments/Mermaid/LaTeX, with 3 syntax reference sheets |
+| **[obsidian-bases](https://github.com/Gonglitian/agent-skills/tree/main/skills/obsidian-bases)** | Author Obsidian Bases (.base YAML): 4 view types (table/cards/list/map) + filters/formulas/groupBy/summaries, with Duration-math gotchas, YAML quoting rules, and a full functions reference (Date/String/Number/List/File/RegExp) |
+| **[obsidian-cli](https://github.com/Gonglitian/agent-skills/tree/main/skills/obsidian-cli)** | Drive a live Obsidian vault via the `obsidian` CLI: notes / search / daily / tasks / properties / tags / backlinks + plugin-dev loop (reload → dev:errors → screenshot/DOM → console) with in-app JS eval and mobile emulation |
+
 ## Research Workflow
 
 These skills support the full research cycle:
@@ -82,6 +104,13 @@ idea_refinery → gap-to-method → project-init → auto_experiment → experim
 comprehensive-survey read-paper                gpu-train-monitor
                                                train-debug
                                                data-pipeline-check
+```
+
+And the local paper knowledge-base pipeline:
+
+```
+omnibox-sync ─→ arxiv-deepdive ─→ omnibox-search
+omnibox-video ↗   (01_highlevel + 02_technical)   (bge-m3 + sqlite-vec semantic search)
 ```
 
 ## License

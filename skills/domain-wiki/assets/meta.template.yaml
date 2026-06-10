@@ -1,0 +1,7 @@
+domain: <domain-name>
+refresh_cutoff: <YYYY-MM-DD>     # corpus is "current as of" this date
+freshness_window_days: 180       # entries older than (cutoff - window) are flagged --stale
+sources:
+  <source-id>:   { kind: docs,  ref: <url> }
+  <source-id-2>: { kind: repo,  ref: <git-url> }
+  <source-id-3>: { kind: paper, ref: <url-or-doi> }

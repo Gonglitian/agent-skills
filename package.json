@@ -1,6 +1,6 @@
 {
   "name": "@vla-reasoning/agent-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Research workflow skills for Claude Code: experiment management, paper reading, training monitoring, data validation, and more",
   "keywords": ["agent-skills", "claude-code", "skills", "ml-research", "vla", "robotics"],
   "license": "MIT"
