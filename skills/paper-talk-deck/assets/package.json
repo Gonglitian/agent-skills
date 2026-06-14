@@ -1,0 +1,19 @@
+{
+  "name": "paper-talk-deck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev --open",
+    "build": "slidev build",
+    "export": "slidev export",
+    "export:pptx": "slidev export --format pptx",
+    "export:pdf": "slidev export --format pdf"
+  },
+  "dependencies": {
+    "@slidev/cli": "^51.0.0",
+    "@slidev/theme-seriph": "^0.25.0"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.49.0"
+  }
+}
