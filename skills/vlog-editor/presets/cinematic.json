@@ -1,0 +1,30 @@
+{
+  "output": "output/travel_vlog.mp4",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "font": "/System/Library/Fonts/Supplemental/Futura.ttc",
+  "xfade_duration": 0.8,
+  "xfade_transition": "fade",
+  "grade": "eq=contrast=1.07:brightness=0.012:saturation=1.16:gamma=0.97,curves=r='0/0 0.5/0.55 1/1':b='0/0.025 0.5/0.46 1/0.96',vignette=PI/4.5,unsharp=3:3:0.4",
+  "end_fade_to_black": 1.0,
+  "title": {
+    "text": "WANDERLUST",
+    "subtitle": "a short travel film  ·  summer 2026",
+    "in": 0.6,
+    "hold_until": 5.2
+  },
+  "music": {
+    "path": "footage/music.mp3",
+    "start": 0.0,
+    "fade_in": 1.5,
+    "fade_out": 2.8,
+    "gain_db": -1.0
+  },
+  "segments": [
+    {"clip": "footage/clip3.mp4", "in": 1.0, "dur": 6.5, "role": "open", "caption": ""},
+    {"clip": "footage/clip2.mp4", "in": 20.0, "dur": 8.0, "caption": "HIT THE ROAD"},
+    {"clip": "footage/clip4.mp4", "in": 2.0, "dur": 7.0, "portrait": true, "caption": "CHASING HORIZONS"},
+    {"clip": "footage/clip6.mp4", "in": 3.0, "dur": 8.0, "role": "close", "caption": "UNTIL NEXT TIME"}
+  ]
+}

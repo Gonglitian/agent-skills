@@ -1,0 +1,49 @@
+# project.md — vlog-editor 工程记忆
+
+> 跨会话记忆账本(沿用 video-use 的 `project.md` 范式)。每次渲染后追加 Render Log。
+> 新会话先读这份文件即可续上工作。
+
+## 环境(本机已验证)
+
+- **渲染必须用完整版 ffmpeg**:`/opt/homebrew/Caskroom/miniconda/base/envs/whisper/bin/ffmpeg`
+  （Homebrew 的 `/opt/homebrew/bin/ffmpeg` 没编译 libfreetype，**没有 drawtext**）
+- 语音:`mlx_whisper`（conda `whisper` 环境，模型 `mlx-community/whisper-large-v3-turbo`）
+- 节拍:`librosa`（conda `whisper` 环境）
+- 下载:`yt-dlp`；去静默:`auto-editor`
+- 平台:Apple Silicon，VideoToolbox 硬件编码（`h264_videotoolbox`）
+
+## 素材库
+
+| 文件 | 内容 | 规格 |
+|---|---|---|
+| footage/clip2.mp4 | 泰国丛林公路 | 2560×1440 29.97fps 48s |
+| footage/clip3.mp4 | 城市黄昏无人机 | 1920×1080 59.94fps 11s |
+| footage/clip4.mp4 | 竖屏行车 | 1080×1920 30fps 13s |
+| footage/clip6.mp4 | 山峦落日 | 2560×1440 25fps 18s |
+| footage/music.mp3 | Journey of Solitude (CC0) | 152 BPM, 156s |
+| footage_real/hawaii.mp4 | 夏威夷步拍（中段过曝 54–111s、暗 114–129s） | 1080p 30fps 150s |
+| footage_real/seoul.mp4 | 首尔明洞食街 | 1080p 60fps 120s |
+
+## 风格预设
+
+- `presets/cinematic.json` — 0.8s 交叉转场、暖色电影感、舒缓
+- `presets/beat.json` — 硬切卡 downbeat、Ken-Burns 推镜、跟拍节奏
+
+## Render Log
+
+| 日期 | EDL | 输出 | 时长 | QC |
+|---|---|---|---|---|
+| 2026-06-18 | edl.json | output/travel_vlog.mp4 | 27.1s | PASS（cinematic 首版） |
+| 2026-06-18 | edl_beat.json | output/travel_vlog_beat.mp4 | 29.6s | PASS（踩点版） |
+| 2026-06-18 | （内联） | output/subtitle_demo.mp4 | 12.4s | PASS（语音字幕 demo） |
+| 2026-06-18 | edl_real.json | output/real_travel_diary.mp4 | 28.8s | PASS（真实素材双城） |
+
+## 决策 & 踩坑（务必记住）
+
+1. **引擎是 FFmpeg**，不是 DaVinci/Blender/OTIO MCP（剪辑调色 API 被封；OTIO 不渲染像素）。
+2. **drawtext 字幕全消失**两大原因，都已修进 `assemble.py`：
+   - Homebrew ffmpeg 无 libfreetype → 用 conda 完整版。
+   - **`-ss` 必须放 `-i` 之前**（输入端定位重置时间轴）；放之后保留源 PTS，高 in 点片段的 alpha 淡入淡出窗口永不命中 → 字幕 alpha 恒 0。
+   - 字幕用黑色描边 `borderw` + 加强底板，亮背景才可读。
+3. **连续长镜头不要用 shot detection**（PySceneDetect/TransNetV2 找不到切点）。用 `scan.py` 抽帧→我看印相表→选窗口（mazsola2k/video-use 范式）。
+4. 卡点:`beats.py` 出 downbeat → EDL 段时长 = 相邻 downbeat 之差 → `assemble.py` 硬切落在拍上。
