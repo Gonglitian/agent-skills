@@ -1,0 +1,4 @@
+interface:
+  display_name: "Slidev Academic Deck"
+  short_description: "Build and QA academic Slidev decks"
+  default_prompt: "Use $slidev-academic-deck to create or improve a research-style Slidev deck with screenshot-based layout QA."

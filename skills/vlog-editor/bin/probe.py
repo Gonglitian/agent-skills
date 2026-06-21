@@ -5,14 +5,18 @@ Usage: python3 bin/probe.py footage/*.mp4 > work/probe.json
 The understanding layer: gives the editorial brain exact specs to plan around.
 """
 import json
+import os
 import subprocess
 import sys
 from fractions import Fraction
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _env
+
 
 def probe_one(path: str) -> dict:
     out = subprocess.run(
-        ["ffprobe", "-v", "error", "-of", "json",
+        [_env.ffprobe(), "-v", "error", "-of", "json",
          "-show_format", "-show_streams", path],
         capture_output=True, text=True, check=True,
     ).stdout

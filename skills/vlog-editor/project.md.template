@@ -3,10 +3,10 @@
 > 跨会话记忆账本(沿用 video-use 的 `project.md` 范式)。每次渲染后追加 Render Log。
 > 新会话先读这份文件即可续上工作。
 
-## 环境(本机已验证)
+## 环境(开工先 `python3 bin/doctor.py` 自检；脚本自动探测，无需手填)
 
-- **渲染必须用完整版 ffmpeg**:`/opt/homebrew/Caskroom/miniconda/base/envs/whisper/bin/ffmpeg`
-  （Homebrew 的 `/opt/homebrew/bin/ffmpeg` 没编译 libfreetype，**没有 drawtext**）
+- **ffmpeg 需带 drawtext(libfreetype)**:Homebrew 版常缺 → 用 conda-forge 版。`_env.py` 会自动挑带 drawtext 的那个；`FFMPEG`/`FFPROBE`/`VLOG_FONT` 可覆盖。
+- 编码器自动回落 VideoToolbox→libx264；字体自动选 macOS Futura / Linux DejaVu。
 - 语音:`mlx_whisper`（conda `whisper` 环境，模型 `mlx-community/whisper-large-v3-turbo`）
 - 节拍:`librosa`（conda `whisper` 环境）
 - 下载:`yt-dlp`；去静默:`auto-editor`

@@ -3,7 +3,7 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "font": "/System/Library/Fonts/Supplemental/Futura.ttc",
+  "_font": "auto-detected (macOS Futura / Linux DejaVu); set an absolute path or $VLOG_FONT to override",
   "xfade_transition": "cut",
   "kenburns": true,
   "kenburns_max": 1.06,

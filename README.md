@@ -1,6 +1,6 @@
 # Agent Skills Collection
 
-A comprehensive collection of **45 Claude Code skills** for ML research workflows, covering the full research cycle from literature survey to experiment management.
+A comprehensive collection of **46 Claude Code skills** for ML research workflows, covering the full research cycle from literature survey to experiment management.
 
 ## Installation
 
@@ -85,6 +85,7 @@ npx skills add Gonglitian/agent-skills --skill read-paper
 | **[wuyin-gpt-image-2](https://github.com/Gonglitian/agent-skills/tree/main/skills/wuyin-gpt-image-2)** | GPT-Image-2 text-to-image / image edit via 速创API (api.wuyinkeji.com): async submit → poll → download, with 3 paper-figure style presets (UniVLA / Physical Intelligence / Fast-WAM), each shipping curated reference images auto-uploaded to catbox and reused as `urls` for high-fidelity style-mimic |
 | **[marp-slide](https://github.com/Gonglitian/agent-skills/tree/main/skills/marp-slide)** | Create professional Marp presentation slides with 7 themes, custom layouts, and auto quality improvements |
 | **[paper-talk-deck](https://github.com/Gonglitian/agent-skills/tree/main/skills/paper-talk-deck)** | Turn a set of papers into one continuous Slidev HTML 串讲: per-paper section (motivation → method diagram from original figure + Mermaid redraw → core code with line-by-line focus/magic-move pinned to file:line → results) + cross-paper compare; reuses omnibox-search / arxiv-deepdive / read-paper / drawio for material; exports PDF/PPTX → Google Slides |
+| **[slidev-academic-deck](https://github.com/Gonglitian/agent-skills/tree/main/skills/slidev-academic-deck)** | Style + quality layer for research Slidev decks: academic style guide, HTML/CSS flow diagrams (reliable over SVG `<text>`), asset pipeline (paper-figure crops, GIF vs looping MP4, ffmpeg/pdftoppm recipes), Slidev-52 build gotchas, and clean `export --format png` screenshot QA |
 | **[audio-transcribe](https://github.com/Gonglitian/agent-skills/tree/main/skills/audio-transcribe)** | Transcribe audio/video to text: faster-whisper large-v3 with parallel CUDA scheduling + mlx-whisper counterpart for Apple Silicon (Metal), plus a context-aware LLM polish pass (auto-triggered, timestamp-preserving) |
 
 ### Obsidian (笔记系统)

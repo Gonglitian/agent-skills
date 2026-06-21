@@ -22,13 +22,13 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _env
+
 ROOT = os.getcwd()  # resolve work/ relative to where the user runs (portable as a skill)
 SCAN_DIR = os.path.join(ROOT, "work", "scan")
-FFMPEG = os.environ.get(
-    "FFMPEG",
-    "/opt/homebrew/Caskroom/miniconda/base/envs/whisper/bin/ffmpeg",
-)
-FONT = "/System/Library/Fonts/Supplemental/Futura.ttc"
+FFMPEG = _env.ffmpeg()
+FONT = _env.font()
 
 
 def duration(path):

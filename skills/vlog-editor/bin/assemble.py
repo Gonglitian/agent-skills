@@ -15,18 +15,18 @@ import os
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _env
+
 # Paths in the EDL (clips, output) and the work/ dir are resolved relative to
 # the CURRENT WORKING DIRECTORY, so the script is portable: run it from any
 # project folder (e.g. when installed as a skill under ~/.claude/skills/).
 ROOT = os.getcwd()
 SEG_DIR = os.path.join(ROOT, "work", "segments")
 
-# The Homebrew ffmpeg lacks libfreetype (no drawtext). The conda `whisper`
-# env ships the full conda-forge build: drawtext + libass + videotoolbox.
-FFMPEG = os.environ.get(
-    "FFMPEG",
-    "/opt/homebrew/Caskroom/miniconda/base/envs/whisper/bin/ffmpeg",
-)
+# Auto-detected drawtext-capable ffmpeg (override via $FFMPEG). The Homebrew
+# build often lacks libfreetype; _env prefers one that has drawtext.
+FFMPEG = _env.ffmpeg()
 
 
 def run(cmd):
@@ -222,7 +222,7 @@ def pass2(edl, seg_files):
     cmd = ["ffmpeg", "-y", "-nostdin"] + inputs + [
         "-filter_complex", filter_complex,
         "-map", vlabel, "-map", "[aout]",
-        "-c:v", "h264_videotoolbox", "-b:v", "12M",
+        *_env.video_encoder_args("12M"),
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
         "-movflags", "+faststart",
         out,
@@ -235,6 +235,7 @@ def main():
     edl_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "edl.json")
     with open(edl_path) as fh:
         edl = json.load(fh)
+    edl["font"] = _env.resolve_font(edl.get("font"))  # portable font
     print(f"== Assembling '{edl_path}' ==")
     seg_files = pass1(edl)
     out, total = pass2(edl, seg_files)

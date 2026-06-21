@@ -14,17 +14,27 @@ description: "本地 AI 驱动的端到端视频剪辑流水线，让 Claude Cod
 
 ---
 
-## 0. 环境(每次开工先确认)
+## 0. 环境(开工先体检 —— 一条命令搞定)
 
 ```bash
-# 渲染必须用完整版 ffmpeg（带 drawtext/libass/videotoolbox）。Homebrew 那个常缺 libfreetype！
-FFMPEG=/opt/homebrew/Caskroom/miniconda/base/envs/whisper/bin/ffmpeg
-$FFMPEG -hide_banner -filters | grep -q drawtext && echo "OK: drawtext 可用" || echo "换一个带 libfreetype 的 ffmpeg"
-WHISPER_PY=/opt/homebrew/Caskroom/miniconda/base/envs/whisper/bin/python   # mlx_whisper + librosa
+python3 bin/doctor.py    # ✅/❌ 表 + 每项修复命令 + 当前可用的能力分层；exit 0 = 能出片
 ```
 
-所有 `bin/*.py` 默认就用这个 ffmpeg(`FFMPEG` 环境变量可覆盖)。缺工具时:
-`brew install yt-dlp` · `$WHISPER_PY -m pip install librosa auto-editor` · whisper 模型 `mlx-community/whisper-large-v3-turbo`。
+脚本(`bin/_env.py`)**自动探测** ffmpeg/ffprobe/字体/编码器,**不需要手填路径**。可用环境变量覆盖:`FFMPEG` · `FFPROBE` · `VLOG_FONT`。
+
+**依赖分层:**
+
+- **🔴 CORE(出片最小集)= 一个带 drawtext 的 ffmpeg + ffprobe + 任意 python3(纯标准库,零 pip)**
+  - `drawtext` 需 libfreetype:Homebrew 版常缺 → 用 `conda install -c conda-forge ffmpeg`(推荐,带 drawtext+libass+VideoToolbox)或完整 `brew install ffmpeg`。`doctor` 会自动挑带 drawtext 的那个。
+  - **编码器自动回落**:有 VideoToolbox(Apple) 用硬件加速,否则 `libx264`,再否则 `mpeg4`。
+  - **字体自动选**:macOS=Futura、Linux=DejaVu/Noto/Liberation;`VLOG_FONT=/path/to/font.ttf` 覆盖。EDL 里的 `font` 字段可省略(自动探测)或写绝对路径。
+- **🟡 可选模块**(各自的 python 里 `pip install`):
+  - 卡点 `beats.py` → `librosa`
+  - 语音字幕 `transcribe.py` → Apple Silicon 用 `mlx-whisper`;**其他平台自动回落** `faster-whisper`(CPU/CUDA 跨平台)
+  - 下载 `yt-dlp` · 去静默 `auto-editor`
+- **双 python 提醒**:`beats/transcribe` 要用装了 librosa/whisper 的解释器(如 conda `whisper` 环境的 python);其余脚本任意 `python3` 即可。`doctor.py` 会告诉你各模块在哪个 python 里可用——按它给的解释器路径调用。
+
+> **不卡点、不做语音字幕时,只要一个带 drawtext 的 ffmpeg 就能出片**(核心链路零 pip 依赖)。
 
 ---
 
@@ -135,6 +145,7 @@ python3 bin/qc.py output/final.mp4 --edl edl.json   # 黑帧/削波/时长/规�
 ## 快速上手(最短路径)
 
 ```bash
+python3 bin/doctor.py                                # 0) 先体检环境
 # 1) 有素材在 footage/ 后：
 python3 bin/probe.py footage/*.mp4 > work/probe.json
 python3 bin/scan.py footage/<longclip>.mp4          # B-roll 才需要；Read 印相表选窗口
@@ -143,4 +154,4 @@ python3 bin/assemble.py edl.json
 python3 bin/qc.py output/final.mp4 --edl edl.json   # Read QC 印相表，必要时重渲
 ```
 
-工具清单:`probe.py`(探测) `scan.py`(B-roll选取) `transcribe.py`(转写) `subtitles.py`(字幕) `beats.py`(卡点) `assemble.py`(渲染) `qc.py`(自检)。
+工具清单:`doctor.py`(环境体检) `probe.py`(探测) `scan.py`(B-roll选取) `transcribe.py`(转写) `subtitles.py`(字幕) `beats.py`(卡点) `assemble.py`(渲染) `qc.py`(自检) · `_env.py`(共享环境探测,被其他脚本 import,非入口)。

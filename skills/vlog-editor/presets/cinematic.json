@@ -3,7 +3,7 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "font": "/System/Library/Fonts/Supplemental/Futura.ttc",
+  "_font": "auto-detected (macOS Futura / Linux DejaVu); set an absolute path or $VLOG_FONT to override",
   "xfade_duration": 0.8,
   "xfade_transition": "fade",
   "grade": "eq=contrast=1.07:brightness=0.012:saturation=1.16:gamma=0.97,curves=r='0/0 0.5/0.55 1/1':b='0/0.025 0.5/0.46 1/0.96',vignette=PI/4.5,unsharp=3:3:0.4",
