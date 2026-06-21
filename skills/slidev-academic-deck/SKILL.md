@@ -19,6 +19,7 @@ It does not replace paper discovery or paper-reading workflows. Use `paper-talk-
    - Load `references/style-guide.md` when building or matching the academic reference style.
 
 2. **Set up the Slidev surface**
+   - **Pin Slidev to the current major `52.x`** (`@slidev/cli ^52.16.0` + `@slidev/theme-seriph ^0.25.0`). Slidev dropped the `0.` prefix — `52.x` **is** the latest major (52.16.0), *not* `0.52`; never "correct" it down to a `0.x` range, and update any deck still on `0.4x/0.5x`. ≥52 also kills the stray `.autocomplete-list` (Goto.vue) panel that otherwise overlays screenshots during QA.
    - Prefer standard Slidev markdown plus scoped HTML/CSS; use inline SVG only for precise arrow geometry (see step 3).
    - Keep project-level styling in `style.css`; avoid scattering one-off layout rules unless the slide truly needs custom geometry.
    - Disable remote font fetching unless the project already depends on it: set `fonts.provider: none` in Slidev frontmatter.
