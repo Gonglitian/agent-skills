@@ -1,0 +1,85 @@
+/* ============================================================================
+   Academic Slidev stylesheet — copy into a deck root as `style.css`.
+   Bundles: academic base (style-guide.md) + HTML/CSS flow-diagram primitives
+   (svg-diagram-patterns.md) + chips / panels / VS / callouts. Edit freely.
+   Diagram primitives are RELIABLE across dev / PDF / PPTX (unlike SVG <text>).
+   ============================================================================ */
+
+:root {
+  --paper:#ffffff; --ink:#151515; --muted:#4f6b7a; --rule:#d8dee2;
+  --note:#fff8e8; --note-line:#f2c94c;
+  /* box accent palette (use as .fbox.<letter>) */
+  --c-b:#1e40af;  --bg-b:#e7eefc;   /* b = primary / blue   */
+  --c-t:#2f6f8f;  --bg-t:#eaf2f6;   /* t = teal / process   */
+  --c-o:#b45309;  --bg-o:#fdf0e3;   /* o = orange / amber   */
+  --c-g:#64748b;  --bg-g:#f1f5f9;   /* g = gray / frozen    */
+  --c-gn:#15803d; --bg-gn:#e7f6ec;  /* gn = green / gain    */
+  --c-rd:#b91c1c; --bg-rd:#fdeaea;  /* rd = red / anti      */
+  --c-vl:#6d28d9; --bg-vl:#f0e9fb;  /* vl = violet / loss   */
+}
+
+/* ---- base ---- */
+.slidev-layout { background:var(--paper); color:var(--ink); padding:2.2rem 2.6rem; }
+.slidev-layout h1 { color:var(--muted); font-family:Georgia,"Times New Roman",serif;
+  font-weight:600; letter-spacing:0; font-size:1.7rem; margin-bottom:0.2rem; }
+.slidev-layout h2 { color:var(--c-b); font-family:Georgia,serif; font-weight:600; font-size:1.15rem; }
+.slidev-layout h1 + p { color:var(--muted); margin-top:0; }
+.slidev-layout p, .slidev-layout li { font-size:0.92rem; line-height:1.4; }
+
+/* ---- cover (add `class: cover` to a slide's frontmatter) ---- */
+.cover { background:#0f1b2d; color:#eaf1f8; }
+.cover h1 { color:#eaf1f8; font-size:2.4rem; }
+.cover h2 { color:#cfe0ee; }
+.cover .sub { color:#9fb6c9; font-size:1.0rem; }
+.cover .meta { color:#6f879b; font-size:0.8rem; margin-top:1.2rem; }
+
+/* ---- flow diagram primitives (flex boxes + Unicode arrows) ---- */
+.flow { display:flex; align-items:center; justify-content:center; gap:0.4rem; flex-wrap:wrap; }
+.flow.col { flex-direction:column; align-items:stretch; }
+.fbox { border:1.5px solid var(--rule); border-radius:7px; padding:0.42rem 0.6rem; font-size:0.78rem;
+  text-align:center; line-height:1.22; font-family:ui-sans-serif,system-ui,sans-serif; background:#fcfdfe; }
+.fbox small { display:block; color:#647985; font-size:0.64rem; font-style:italic; margin-top:1px; }
+.fbox b { font-weight:700; }
+.fbox.big { font-size:0.88rem; padding:0.55rem 0.8rem; }
+.fbox.dash { border-style:dashed; }
+.fbox.b  { background:var(--bg-b);  border-color:var(--c-b);  color:#1b3a73; }
+.fbox.t  { background:var(--bg-t);  border-color:var(--c-t);  color:#1d4a5e; }
+.fbox.o  { background:var(--bg-o);  border-color:var(--c-o);  color:#7c3d0a; }
+.fbox.g  { background:var(--bg-g);  border-color:var(--c-g);  color:#334155; }
+.fbox.gn { background:var(--bg-gn); border-color:var(--c-gn); color:#14532d; }
+.fbox.rd { background:var(--bg-rd); border-color:var(--c-rd); color:#7f1d1d; }
+.fbox.vl { background:var(--bg-vl); border-color:var(--c-vl); color:#4c1d95; }
+
+.farrow { color:#4d6b78; font-size:1.2rem; font-weight:700; line-height:1; padding:0 0.05rem; }
+.farrow small { display:block; font-size:0.58rem; font-weight:400; font-style:italic; color:#647985; }
+.farrow.down::before { content:"\2193"; }   /* ↓ */
+.farrow.gn { color:var(--c-gn); }
+.farrow.rd { color:var(--c-rd); }
+.loopbar { border:1.5px dashed #8fb0bf; border-radius:6px; background:#eef6fa; color:#2f6f8f;
+  font-size:0.78rem; text-align:center; padding:0.35rem 0.6rem; }
+
+/* ---- chips / tags ---- */
+.chip { display:inline-block; border-radius:999px; padding:0.12rem 0.6rem; font-size:0.72rem;
+  font-weight:700; border:1.5px solid var(--rule); }
+.chip.good { background:var(--bg-gn); border-color:var(--c-gn); color:#14532d; }
+.chip.bad  { background:var(--bg-rd); border-color:var(--c-rd); color:#7f1d1d; }
+.chip.info { background:var(--bg-b);  border-color:var(--c-b);  color:#1b3a73; }
+.chip.note { background:var(--note);  border-color:var(--note-line); color:#7a5a00; }
+
+/* ---- callouts ---- */
+.note-box { background:var(--note); border-left:6px solid var(--note-line); padding:0.6rem 0.9rem;
+  border-radius:0 6px 6px 0; font-size:0.85rem; }
+.def-box  { background:#f3f7fb; border-left:6px solid var(--c-b); padding:0.6rem 0.9rem;
+  border-radius:0 6px 6px 0; font-size:0.85rem; }
+
+/* ---- layout helpers ---- */
+.cols2 { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
+.cols3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.8rem; }
+.panel { border:1.5px solid var(--rule); border-radius:8px; padding:0.6rem 0.8rem; }
+.panel h3 { margin:0 0 0.35rem 0; font-size:0.86rem; font-family:Georgia,serif; }
+.vs { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:0.7rem; }
+.vs .mid { font-weight:800; color:var(--muted); font-size:1.1rem; text-align:center; }
+.cap { color:var(--muted); font-size:0.74rem; font-style:italic; text-align:center; margin-top:0.3rem; }
+.tight li { margin:0.05rem 0; }
+.kbd { font-family:ui-monospace,monospace; background:#f1f5f9; border:1px solid var(--rule);
+  border-radius:4px; padding:0 0.3rem; font-size:0.8em; }
