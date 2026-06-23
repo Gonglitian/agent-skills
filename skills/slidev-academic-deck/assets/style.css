@@ -19,7 +19,7 @@
 }
 
 /* ---- base ---- */
-.slidev-layout { background:var(--paper); color:var(--ink); padding:2.2rem 2.6rem; }
+.slidev-layout { background:var(--paper); color:var(--ink); padding:2.2rem 2.6rem; overflow-y:auto; }
 .slidev-layout h1 { color:var(--muted); font-family:Georgia,"Times New Roman",serif;
   font-weight:600; letter-spacing:0; font-size:1.7rem; margin-bottom:0.2rem; }
 .slidev-layout h2 { color:var(--c-b); font-family:Georgia,serif; font-weight:600; font-size:1.15rem; }
@@ -83,3 +83,21 @@
 .tight li { margin:0.05rem 0; }
 .kbd { font-family:ui-monospace,monospace; background:#f1f5f9; border:1px solid var(--rule);
   border-radius:4px; padding:0 0.3rem; font-size:0.8em; }
+
+/* ---- code blocks: compact + scrollable ---- */
+.slidev-layout pre,
+.slidev-layout .shiki {
+  font-size: 0.68rem !important;
+  line-height: 1.28 !important;
+  max-height: 360px;
+  overflow-y: auto;
+  margin: 0.3rem 0;
+}
+.slidev-layout pre code,
+.slidev-layout .shiki code {
+  font-size: inherit;
+  line-height: inherit;
+}
+.slidev-layout code {
+  font-size: 0.78rem;
+}
