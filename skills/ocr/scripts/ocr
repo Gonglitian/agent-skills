@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# ocr — Lightweight OCR via LightOnOCR-2-1B + llama.cpp (Metal GPU)
+# Usage:
+#   ocr <image>              OCR single image → stdout
+#   ocr <image> -o out.md     OCR single image → file
+#   ocr <dir>                 OCR all images in dir → <dir>/*.md
+#   ocr --help
+
+set -euo pipefail
+
+MODEL="${OCR_MODEL:-$HOME/proj/ocr-models/LightOnOCR-2-1B-Q4_K_M.gguf}"
+MMPROJ="${OCR_MMPROJ:-$HOME/proj/ocr-models/LightOnOCR-2-1B-mmproj-f16.gguf}"
+LLAMA_MTMD="${OCR_LLAMA_MTMD:-/opt/homebrew/bin/llama-mtmd-cli}"
+TEMP="${OCR_TEMP:-0.1}"
+NGL="${OCR_NGL:-99}"
+CTX="${OCR_CTX:-4096}"
+MAX_TOKENS="${OCR_MAX_TOKENS:-2000}"
+
+PROMPT="Convert this image to Markdown. Preserve all text, structure, tables, and formatting."
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+run_ocr() {
+    local image="$1"
+    "$LLAMA_MTMD" \
+        -m "$MODEL" \
+        --mmproj "$MMPROJ" \
+        --image "$image" \
+        -p "$PROMPT" \
+        --temp "$TEMP" \
+        -ngl "$NGL" \
+        -c "$CTX" \
+        -n "$MAX_TOKENS" 2>/dev/null
+}
+
+ocr_single() {
+    local image="$1" out="$2"
+    local content
+    content=$(run_ocr "$image")
+    if [[ -n "$out" ]]; then
+        echo "$content" > "$out"
+        echo "  -> $out"
+    else
+        echo "$content"
+    fi
+}
+
+ocr_dir() {
+    local dir="$1"
+    local count=0
+    local total
+    total=$(find "$dir" -maxdepth 1 \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | wc -l | tr -d ' ')
+    echo "OCR batch: $total images in $dir"
+    echo ""
+    find "$dir" -maxdepth 1 \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | sort | while read -r img; do
+        count=$((count + 1))
+        local base
+        base=$(basename "$img" | sed 's/\.[^.]*$//')
+        local out="${dir}/${base}.md"
+        echo "[$count/$total] $(basename "$img")"
+        ocr_single "$img" "$out"
+    done
+    echo ""
+    echo "Done. Output: $dir/*.md"
+}
+
+# ── main ──
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "ocr — Lightweight OCR via LightOnOCR-2-1B + llama.cpp (Metal GPU)"
+    echo ""
+    echo "Usage:"
+    echo "  ocr <image>              OCR single image -> stdout"
+    echo "  ocr <image> -o out.md    OCR single image -> file"
+    echo "  ocr <dir>                OCR all images in dir -> <dir>/*.md"
+    echo ""
+    echo "Env vars:"
+    echo "  OCR_MODEL       Path to GGUF model (default: ~/proj/ocr-models/LightOnOCR-2-1B-Q4_K_M.gguf)"
+    echo "  OCR_MMPROJ      Path to mmproj (default: ~/proj/ocr-models/LightOnOCR-2-1B-mmproj-f16.gguf)"
+    echo "  OCR_TEMP        Temperature (default: 0.1)"
+    echo ""
+    echo "Speed: ~6s per image on M4 (Metal GPU)"
+    exit 0
+fi
+
+[[ -f "$MODEL" ]] || die "Model not found: $MODEL"
+[[ -f "$MMPROJ" ]] || die "mmproj not found: $MMPROJ"
+
+INPUT="${1:-}"
+OUTPUT=""
+
+if [[ "${2:-}" == "-o" && -n "${3:-}" ]]; then
+    OUTPUT="$3"
+fi
+
+if [[ -z "$INPUT" ]]; then
+    die "Usage: ocr <image|dir> [-o output.md]"
+fi
+
+if [[ -d "$INPUT" ]]; then
+    ocr_dir "$INPUT"
+elif [[ -f "$INPUT" ]]; then
+    ocr_single "$INPUT" "$OUTPUT"
+else
+    die "Not found: $INPUT"
+fi
