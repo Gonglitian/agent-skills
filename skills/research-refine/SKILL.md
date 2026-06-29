@@ -32,7 +32,7 @@ Vague direction
 
 - **Direction**: free-text description of the research direction
 - **`--no-literature`** — skip literature grounding (when you already know the field)
-- **`--reviewer <model>`** — use external reviewer (e.g. `gpt-5.4` via Codex MCP). Default: internal self-review.
+- **`--reviewer <model>`** — use external reviewer (e.g. `gpt-5.5` via Codex MCP). Default: internal self-review.
 - **`--max-rounds <N>`** — max review-revise rounds (default: 3)
 - **`--output <dir>`** — output directory (default: `refine-logs/`)
 
@@ -165,8 +165,8 @@ If Codex MCP is unavailable, fall back to internal self-review.
 
 ```json
 mcp__codex__exec({
-  model: "gpt-5.4",
-  config: {"model_reasoning_effort": "xhigh"},
+  model: "gpt-5.5",
+  config: {"model_reasoning_effort": "max"},
   prompt: |
     You are a senior ML reviewer for a top venue (NeurIPS/ICML/ICLR/CoRL).
     This is an early-stage, method-first research proposal.
