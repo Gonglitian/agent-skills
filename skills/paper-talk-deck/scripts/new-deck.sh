@@ -31,7 +31,7 @@ cat <<EOF
 
 deck scaffolded at: $DECK_DIR
   slides.md   主文件(已套用模板,按大纲填充;每篇可拆到 papers/<arxiv>.md 用 src 引入)
-  public/     放抽出的 method 原图,slide 里用 /<arxiv>/fig.png 引用
+  public/     放抽出的 method 原图,slide 里用 <img :src="'/<arxiv>/fig.png'">(Slidev52 必须 :src 绑定,别用 src="/...")
   papers/     每篇论文单独的 .md(可选)
 
 next:

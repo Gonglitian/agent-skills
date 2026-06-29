@@ -1,124 +1,83 @@
 ---
 name: paper-discovery-sources
-description: "Shared reference for all paper search skills. Defines the unified 3-source paper discovery strategy: local vec-db (96K top-venue papers), Semantic Scholar API (200M+ papers + citation graph), and AlphaXiv (free full-text reading). This skill is NOT user-invokable — it is a reference loaded by other skills (comprehensive-survey, gap-to-method, paper_related_works, idea_refinery, topic_survey)."
+description: "Shared reference for all paper search skills. Points to litian-academic-search as the canonical multi-source search entry point (7 sources: OmniBox, arXiv, Semantic Scholar, OpenAlex, DeepXiv, WebSearch, WebFetch). This skill is NOT user-invokable — it is a reference loaded by other skills (comprehensive-survey, gap-to-method, paper_related_works, idea_refinery, topic_survey, survey-to-deck, paper-talk-deck)."
 ---
 
 # Unified Paper Discovery Sources
 
-This is a shared reference document. Other paper-related skills should follow these strategies.
+**All paper search skills now delegate to `/litian-academic-search`** as the single canonical multi-source search entry point. This file documents the contract and provides source reference for skills that need to understand what's available.
 
-## The Three Sources
+## Canonical Search Entry Point
 
-### Source 1: Local Vec-db (Precision — 96K top-venue papers)
+```
+/litian-academic-search "QUERY" --sources <list> --k <N> [--year YYYY-] [--topic <tag>] [--deep]
+```
 
-**What**: LanceDB vector database with ~96K papers from CoRL, ICRA, IROS, RSS, NeurIPS, ICML, ICLR, CVPR, etc.
-**Best for**: Finding highly relevant top-venue papers via semantic similarity.
-**Limitation**: Only indexed conferences; no arXiv-only papers; no citation info.
+This replaces all individual curl/API calls previously documented here. The skill queries 7 sources in parallel, de-duplicates by arXiv ID → DOI → title, and returns a structured report.
+
+## Available Sources (for --sources parameter)
+
+| Source | What | Key |
+|--------|------|-----|
+| `omnibox` | Local vec-db: 3136 CS papers, full-report chunks (bge-m3) | conda env `ml`, SiliconFlow key |
+| `arxiv` | 2.5M+ CS preprints, daily updates | Public API, no key |
+| `s2` | Semantic Scholar: 200M+ published papers, citation graph | Key at `~/.semantic_scholar_key` |
+| `openalex` | 250M+ cross-discipline, institutions, funding | Public API, no key |
+| `deepxiv` | 200M+ papers, progressive reading (brief → section → full) | conda env `ocr` |
+| `web` | WebSearch: whole web, arXiv, Google Scholar, blogs, social | Built-in Claude Code tool |
+| `all` | All of the above | — |
+
+Full source profiles: `skills/litian-academic-search/references/sources.md`.
+
+## Strategy by Goal (delegated to litian-academic-search)
+
+### Goal A: "Survey a topic"
+
+```
+/litian-academic-search "TOPIC" --sources all --k 10
+```
+
+### Goal B: "Find gaps / propose method"
+
+```
+/litian-academic-search "DIMENSION_QUERY" --sources omnibox,s2,arxiv --k 5 --year 2023-
+```
+
+### Goal C: "Map related works of a paper"
+
+```
+/litian-academic-search "PAPER_KEY_CONCEPT" --sources omnibox,s2,web --k 10
+```
+
+### Goal D: "Refine a research idea"
+
+```
+/litian-academic-search "IDEA_CONCEPT" --sources omnibox,s2,arxiv -k 8 --year 2024-
+```
+
+## Additional: Citation Graph (Semantic Scholar direct)
+
+For citation-chain operations (successors/predecessors of a specific paper), litian-academic-search doesn't cover this yet. Use S2 API directly:
 
 ```bash
-cd /home/vla-reasoning/proj/litian-research/vec-db
-npx tsx src/cli.ts search "<query>" --top 15
+S2_KEY=$(cat ~/.semantic_scholar_key)
+# Successors (who cited this paper)
+curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,citationCount,citations.title,citations.year,citations.externalIds,citations.citationCount" -H "x-api-key: $S2_KEY"
+# Predecessors (papers this paper cited)
+curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,references.title,references.year,references.externalIds,references.citationCount" -H "x-api-key: $S2_KEY"
 ```
 
-**Tips**:
-- Run 5-8 diverse queries per topic (different angles)
-- Use English queries (embeddings are English-centric)
-- Score > 0.25 is relevant
-- Results include title, venue, year, abstract — but NOT arXiv ID (need to look up separately)
+## Additional: Full-text reading
 
-### Source 2: Semantic Scholar API (Breadth — 200M+ papers)
+For reading a specific paper beyond what litian-academic-search returns:
 
-**What**: Free academic search API with citation graph, covering all major publishers.
-**Best for**: Keyword search across ALL papers; finding citing/cited papers; getting citation counts.
-**Limitation**: No full text; rate limited (5000 req/5min unauthenticated).
-
-**Search by keyword**:
 ```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED_KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
+# DeepXiv progressive reading
+conda run -n ocr deepxiv paper ARXIV_ID --preview
+
+# arXiv PDF
+wget -q "https://arxiv.org/pdf/ARXIV_ID" -O "ARXIV_ID.pdf"
+
+# AlphaXiv (may 403 without auth)
+curl -sL -A "Mozilla/5.0" "https://www.alphaxiv.org/overview/ARXIV_ID.md"
 ```
-
-**Search recent papers**:
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&year=2024-2026"
-```
-
-**Get citations of a paper (successors)**:
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,citationCount,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
-```
-
-**Get references of a paper (predecessors)**:
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,references.title,references.year,references.externalIds,references.citationCount"
-```
-
-### Source 3: AlphaXiv (Reading — free full text)
-
-**What**: Free structured Markdown rendering of arXiv papers.
-**Best for**: Reading paper content without downloading PDF. Much faster than PDF parsing.
-**Limitation**: Only arXiv papers; some papers may 404.
-
-**Structured overview** (try first, faster):
-```
-WebFetch: https://alphaxiv.org/overview/<ARXIV_ID>.md
-```
-
-**Full text** (if overview lacks detail):
-```
-WebFetch: https://alphaxiv.org/abs/<ARXIV_ID>.md
-```
-
-**Fallback**: If AlphaXiv returns 404, download and read the PDF directly:
-```bash
-wget -q "https://arxiv.org/pdf/<ARXIV_ID>" -O "<ARXIV_ID>.pdf"
-```
-
-## Recommended Discovery Strategy by Goal
-
-### Goal A: "Survey a topic" (comprehensive-survey, topic_survey)
-
-```
-1. Vec-db semantic search (5-8 queries, --top 15 each)     → top-venue papers
-2. Semantic Scholar keyword search (2-3 queries)            → broader coverage + recent
-3. Web search for arXiv (补充最新未索引论文)                → cutting-edge
-4. Deduplicate by title similarity
-5. Read top papers via AlphaXiv
-```
-
-### Goal B: "Find gaps / propose method" (gap-to-method)
-
-```
-1. Vec-db semantic search (per design dimension)            → map the design space
-2. Semantic Scholar keyword search (per dimension)          → fill matrix gaps
-3. Web search for very recent work                          → ensure no one beat you
-4. Build literature matrix from combined results
-5. Read gap-adjacent papers via AlphaXiv for evidence
-```
-
-### Goal C: "Map related works of a paper" (paper_related_works)
-
-```
-1. Read the paper via AlphaXiv                              → understand it first
-2. Semantic Scholar citations API                           → predecessors + successors
-3. Vec-db search with paper's key concepts                  → find related top-venue work
-4. Web search for concurrent/recent follow-ups              → very latest
-```
-
-### Goal D: "Refine a research idea" (idea_refinery)
-
-```
-1. Vec-db search (idea's key concepts)                      → closest existing work
-2. Semantic Scholar search + citation snowball               → validate novelty
-3. AlphaXiv to read key competitors                         → understand deeply
-4. Web search for latest arXiv preprints                    → check no overlap
-```
-
-## Rate Limiting & Best Practices
-
-- **Vec-db**: No limit. Run as many queries as needed.
-- **Semantic Scholar**: 5000 req/5min (unauthenticated). Space requests 0.5s apart for bulk.
-- **AlphaXiv**: No documented limit. Be reasonable (~1 req/sec).
-- **Always deduplicate** across sources before reading — same paper may appear in multiple sources.
-- **Prefer AlphaXiv over PDF** for reading — faster, structured, no parsing errors.
-- **Use Semantic Scholar for citation counts** to prioritize influential papers.
-- **Use vec-db for top-venue filtering** — it only contains accepted papers, not random preprints.

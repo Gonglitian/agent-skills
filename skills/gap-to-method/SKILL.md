@@ -46,39 +46,17 @@ description: >
 
 ---
 
-## Step 2: 三源定向搜索
+## Step 2: 多源定向搜索
 
-> **检索命令语法的唯一来源**：vec-db / Semantic Scholar / AlphaXiv 的精确命令、限流与去重规则，统一定义在 `../paper-discovery-sources/SKILL.md`（见其中 Goal B 检索策略）。需要命令细节时加载它；下面只写本 skill 特有的策略。
+针对每个设计维度，通过 `/litian-academic-search` 定向搜索论文以便填进文献矩阵。
 
-针对每个设计维度，通过 **vec-db + Semantic Scholar + web 搜索** 三源并行搜索。本 skill 的特殊之处在于：搜索不是"调研一个主题"，而是**沿每个设计维度定向找点**，以便把论文填进文献矩阵。
+搜索策略：每个维度构造 1-2 个语义查询，包含该维度的核心概念 + 应用领域：
+- 例：D2(解码器) → `/litian-academic-search "point cloud decoder architecture for manipulation" --sources omnibox,s2,arxiv --k 8`
+- 例：D5(范围) → `/litian-academic-search "selective object-centric reconstruction manipulation" --sources all --k 8`
 
-### 2.1 Vec-db 语义搜索（按维度构造查询）
+**并行执行**：所有维度的查询在同一轮发出，利用多源并行。
 
-对每个维度构造 1-2 个语义查询（命令见公共文档）。查询构造技巧：
-- 包含该维度的核心概念 + 应用领域
-- 例：D2(解码器) → `"point cloud decoder architecture transformer MLP for manipulation"`
-- 例：D5(范围) → `"selective object-centric reconstruction vs full scene manipulation"`
-
-### 2.2 Semantic Scholar API 搜索（补全矩阵空缺）
-
-对每个维度构造 1 个关键词查询，补充 vec-db 未索引的论文（命令见公共文档）。特别适合：
-- 找高引用的经典论文
-- 发现 workshop / journal 论文（vec-db 可能没收录）
-- 获取 arXiv ID（`externalIds.ArXiv`）用于后续 AlphaXiv 阅读
-
-### 2.3 Web 搜索（捕获最新 preprint）
-
-对每个维度构造 1 个 web 搜索查询，侧重最新工作（当前年份 ±1 年），确保没有人已经先做了你的目标 Gap。
-
-### 2.4 并行执行
-
-**强烈建议用并行 subagents**：启动 3 个 Agent（vec-db / Semantic Scholar / web），在同一条消息中三源齐发。
-
-搜索结果跨三源去重（按标题相似度，规则见公共文档），排除已知论文。
-
-### 2.5 阅读关键论文（AlphaXiv 优先）
-
-对 Gap 分析需要深读的论文，优先用 AlphaXiv 读全文（命令与 PDF 回退见公共文档）。
+搜索结果由 litian-academic-search 自动跨源去重（arXiv ID → DOI → 标题）。
 
 ---
 

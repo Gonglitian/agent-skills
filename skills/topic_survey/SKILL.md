@@ -1,5 +1,5 @@
 ---
-name: topic_survey
+name: topic-survey
 description: Survey a research field interactively, exploring papers by topic and writing a structured literature review.
 ---
 
@@ -43,25 +43,20 @@ Define:
 
 ### Step 2: Initial Exploration
 
-> **检索命令语法的唯一来源**:vec-db / Semantic Scholar / AlphaXiv 的精确命令、限流与去重规则,统一定义在 `../paper-discovery-sources/SKILL.md`。需要命令细节时加载它;下面只写本 skill 特有的检索策略。
+Perform literature search via the canonical multi-source entry point:
 
-#### 2a. Search for foundational and recent papers
+```
+/litian-academic-search "<TOPIC>" --sources all --k 12
+```
 
-Run all three sources in parallel for comprehensive coverage. This skill's particular strategy:
+For focused sub-topic queries, use targeted searches:
+```
+/litian-academic-search "<SUB_TOPIC>" --sources omnibox,s2,arxiv --k 8 --year 2023-
+```
 
-- **Vec-db** — fire 3-5 queries from *different angles* on the topic (synonyms, sub-areas, adjacent fields). High-precision top-venue results; won't catch recent preprints.
-- **Semantic Scholar** — run two passes per topic: one sorted by citation count (find the classics), one filtered to recent years (find emerging work the citation sort would bury).
-- **Web search** — target surveys/reviews, state-of-the-art roundups, and benchmark-comparison pages to quickly map the landscape, e.g.:
-  ```
-  WebSearch: "<topic>" survey OR review site:arxiv.org
-  WebSearch: "<topic>" state of the art 2025 2026 site:arxiv.org
-  WebSearch: "<topic>" benchmark comparison site:paperswithcode.com
-  ```
-- **AlphaXiv** — read any candidate paper that has an arXiv ID (overview first, full text only if needed).
+**From seed papers (if user provided):**
 
-**From seed papers:**
-
-If user provided seeds, use `/paper_related_works` logic to expand:
+Use Semantic Scholar citation graph directly (see `paper-discovery-sources` for commands):
 - Read each seed's references → find shared citations (convergence = important paper)
 - Find successors of each seed → discover recent developments
 
@@ -69,9 +64,9 @@ If user provided seeds, use `/paper_related_works` logic to expand:
 
 Compile all discovered papers into a working list:
 
-| # | Title | Year | Citations | Source | Sub-topic | Read? |
-|---|-------|------|-----------|--------|-----------|-------|
-| 1 | ... | ... | ... | search/seed/reference | ... | [ ] |
+| # | Title | Year | Citations | Sources | Sub-topic | Read? |
+|---|-------|------|-----------|---------|-----------|-------|
+| 1 | ... | ... | ... | arxiv,s2,omnibox | ... | [ ] |
 
 ### Step 3: Present Initial Map & Ask for Direction
 
@@ -105,7 +100,7 @@ Based on user direction, go deeper into selected sub-topics.
 
 **For each priority sub-topic:**
 
-1. **Read key papers** via AlphaXiv (overview first, full text if needed, PDF fallback — see `../paper-discovery-sources/SKILL.md` for the exact commands).
+1. **Read key papers** via DeepXiv or PDF (see `paper-discovery-sources` for commands).
 
 2. **Extract per-paper notes:**
    - Problem addressed
@@ -116,9 +111,9 @@ Based on user direction, go deeper into selected sub-topics.
 
 3. **Follow citation chains** — if a paper references something important we haven't seen, add it
 
-4. **Check for very recent work** (last 6 months) that may not have many citations yet:
+4. **Check for very recent work** (last 6 months):
    ```
-   WebSearch: "<sub-topic>" 2025 2026 site:arxiv.org
+   /litian-academic-search "<sub-topic>" --sources arxiv,web --k 10 --year 2026-
    ```
 
 **After each sub-topic exploration, ASK USER:**
@@ -278,5 +273,5 @@ cp review.md doc/surveys/<YYYY-MM-DD>_<topic_slug>.md
 | Topic too broad | Ask user to narrow; suggest 2-3 sub-scopes |
 | Topic too niche | Broaden search terms; include adjacent fields |
 | Few recent papers | Field may be mature; focus on established work + check if topic evolved under new name |
-| Semantic Scholar rate limit | Space requests; fall back to web search |
+| Search returns few results | Try broader queries via litian-academic-search; add web source |
 | User unsure about direction | Present 2-3 concrete options with tradeoffs |

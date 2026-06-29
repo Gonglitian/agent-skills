@@ -79,24 +79,24 @@ class: text-center
 </div>
 
 ---
-layout: image-right
-image: /XXXX.XXXXX/fig_arch.png
----
 
-# Method 框图
+# Method 框图：<在讲哪块>
 
-<v-clicks>
+<!-- 整图居中 + object-contain + 限高:整图不被裁、不溢出页面(别用裸 layout: image* —— 默认 cover 会裁图)
+     ⚠️ Slidev 52 必须用 :src 运行时绑定引 public 图,别用 src="/..."(会被 import-guard 当 import 拒绝,dev/build 都 500) -->
+<img :src="'/XXXX.XXXXX/fig_arch.png'" class="block mx-auto object-contain max-h-[56vh] max-w-[94%] rounded shadow" />
 
-- 输入 → <模块1> → <模块2> → 输出
-- 关键模块:**<本文新增的那块>**
-- 数据流要点:<张量怎么走>
+<div class="grid grid-cols-3 gap-3 text-sm mt-3">
+<div>输入 → <模块1> → <模块2> → 输出</div>
+<div>关键模块：**<本文新增的那块>**</div>
+<div>数据流要点：<张量怎么走></div>
+</div>
 
-</v-clicks>
-
-<div class="text-xs opacity-50 mt-4">图:论文 Figure 2(原图)</div>
+<div class="text-xs opacity-50 mt-2">图：论文 Figure 2(原图，整图抽取)</div>
 
 <!--
-原图够清楚就用原图(image-right);太满/想强调某条流,改用下一页的 Mermaid 重绘。
+图先用 scripts/extract_full_figure.py 整张抠出来(别用裁过的图)。
+竖长图想配讲解可改 layout: image-right + backgroundSize: contain;太满/想强调某条流就用下一页 Mermaid 重绘。
 -->
 
 ---

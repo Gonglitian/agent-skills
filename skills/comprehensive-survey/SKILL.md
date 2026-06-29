@@ -1,63 +1,21 @@
 ---
 name: comprehensive-survey
 description: >
-  Full-spectrum research survey pipeline: given a topic (or multiple related topics), orchestrates
-  parallel searches across 5 information sources (local vec-db, Semantic Scholar API, WebSearch/arXiv,
-  social platforms via WebSearch site: filters, AlphaXiv paper reading, Brave Search), then produces
-  structured survey reports with paper citations, social media insights, and concept glossary documents
-  with pseudocode. Use PROACTIVELY whenever the user wants a comprehensive literature survey,
-  topic investigation, "全面调研", "综合调研", "survey this topic", "调研一下", "research survey",
-  "帮我全面了解一下这个方向", "从论文到社交平台全面搜", or wants multi-source coverage combining
-  academic papers AND social media discussions on any research topic. Also trigger when user provides
-  a directory path and expects organized multi-file research output.
+  Full-spectrum research survey pipeline: given a topic (or multiple related topics), uses
+  litian-academic-search (7 sources: OmniBox, arXiv, Semantic Scholar, OpenAlex, DeepXiv,
+  WebSearch, WebFetch) for academic paper discovery, plus social media gathering via WebSearch
+  site: filters, then produces structured survey reports with paper citations, social media
+  insights, and concept glossary documents with pseudocode. Use PROACTIVELY whenever the user
+  wants a comprehensive literature survey, topic investigation, "全面调研", "综合调研",
+  "survey this topic", "调研一下", "research survey", "帮我全面了解一下这个方向",
+  "从论文到社交平台全面搜", or wants multi-source coverage combining academic papers AND
+  social media discussions on any research topic. Also trigger when user provides a directory
+  path and expects organized multi-file research output.
 ---
 
 # Comprehensive Research Survey Pipeline
 
-Orchestrate a full-spectrum research investigation combining **academic paper search** (vec-db, Semantic Scholar, WebSearch/arXiv, AlphaXiv, Brave Search) and
-**social media gathering** (5 platforms via WebSearch `site:` filters: B站/知乎/X/Reddit/Tech Blogs) into structured, cross-referenced survey reports with concept
-glossary and pseudocode.
-
-This skill produces the same quality and structure as a manual month-long literature review, but in
-one session. The key insight: **parallelism at every level** — multiple search sources, multiple
-subagents, multiple topics simultaneously.
-
----
-
-## Step 0: Environment Check
-
-Before any search, verify all required infrastructure. Run these checks **in parallel**:
-
-### 0.1 Vec-db (REQUIRED)
-
-```bash
-cd ${VECDB_PATH:-/home/vla-reasoning/proj/vec-db} && npx tsx src/cli.ts status
-```
-
-If this fails, **stop and ask the user**:
-> "Vec-db is required but not found at the default path. Please provide the path to your vec-db installation, e.g. `/path/to/vec-db`"
-
-Store the path for later use. The vec-db should report 60K+ papers. If it reports 0, the index may not be built — tell the user to run `npx tsx src/cli.ts index`.
-
-### 0.2 Semantic Scholar API (auto-available)
-
-```bash
-curl -s --max-time 5 "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=1&fields=title" | head -1
-```
-
-If 429 (rate limited), note it — it is usually transient: wait 3-5s and retry. If persistently 429, use with delay or skip gracefully.
-
-### 0.3 Brave Search MCP (optional enhancement)
-
-Check if `mcp__brave-search__brave_web_search` is available. If not, WebSearch will be used as fallback for all web searches.
-
-**Summary**: After checks, report to user:
-```
-Environment check:
-  ✓ Vec-db: <path> (<N> papers)
-  ✓/✗ Semantic Scholar API
-  ✓/✗ Brave Search MCP
-```
+Orchestrate a full-spectrum research investigation combining **academic paper search** (via `/litian-academic-search` — 7 parallel sources) and **social media gathering** (5 platforms via WebSearch `site:` filters) into structured, cross-referenced survey reports with concept glossary and pseudocode.
 
 ---
 
@@ -80,183 +38,106 @@ Gather from the user (ask if not provided):
 mkdir -p <output_dir>/{<topic-1>,<topic-2>,...,concepts}
 ```
 
-Each topic directory will contain:
+Each topic directory receives:
 ```
 <topic-dir>/
-├── FINAL_REPORT.md      ← Main deliverable (comprehensive survey)
+├── FINAL_REPORT.md      ← Main deliverable
 ├── survey_academic.md    ← Academic paper search results
-├── survey_social.md      ← Social media discussion results
-└── vecdb_papers.md       ← Vec-db top-conference paper list
+└── survey_social.md      ← Social media discussion results
 ```
 
-Top-level files:
+Top-level:
 ```
 <output_dir>/
 ├── README.md                  ← Navigation index
 ├── paper_list_comprehensive.md ← Deduplicated master paper list
 └── concepts/                   ← Concept glossary with pseudocode
-    ├── <concept_1>.md
-    ├── <concept_2>.md
-    └── ...
 ```
 
 ---
 
-## Step 3: Launch Parallel Search Agents
+## Step 3: Academic Paper Search (via litian-academic-search)
 
-This is the core execution step. Launch **ALL search agents in ONE message** for true parallelism.
+Launch **one search per topic** using the canonical multi-source entry point. For N topics, fire N calls in parallel:
 
-For each topic, spawn 3 types of agents simultaneously:
-
-### Agent Type A: Academic Paper Search (one per topic)
-
-Each agent performs multi-source paper search:
-
-**Prompt template:**
 ```
-You are a research paper search specialist. Search for papers on "<TOPIC>" using ALL of the following sources:
+/litian-academic-search "<TOPIC>" --sources all --k <K>
+```
 
-## Source 1: Vec-db Semantic Search
-Run 6-8 diverse semantic queries in parallel:
-cd <VECDB_PATH> && npx tsx src/cli.ts search "<query>" --top 15
+K values by depth: quick=8, standard=15, deep=25.
 
-Query design:
-- Mix high-level conceptual + specific technical queries
-- Use English (embeddings are English-centric)
-- Cover adjacent areas, not just exact matches
+For each topic, also run focused sub-queries for key aspects (parallel with the main search):
+```
+/litian-academic-search "<topic> survey review" --sources arxiv,s2,web --k 5
+/litian-academic-search "<topic> benchmark comparison" --sources web,s2 --k 5
+```
 
-## Source 2: Semantic Scholar API
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
-Also search recent papers: &year=2024-2026
-Run 2-3 keyword variants. If 429, wait 3s and retry once.
+The skill handles de-duplication, ranking, and synthesis automatically.
 
-## Source 3: WebSearch
-Search for: "<topic> arXiv 2024 2025 survey", "<topic> NeurIPS ICML ICLR 2024 2025", etc.
-Use allowed_domains: ["arxiv.org"] for targeted arXiv search.
-Run 6-10 diverse web searches.
-
-## Output
-Write to <output_dir>/<topic>/survey_academic.md with:
-- Structured sections by method/approach
+**Output**: For each topic, write `survey_academic.md` containing:
+- Structured sections by method/approach (from litian-academic-search synthesis)
 - Every paper: title, authors, year, venue, arXiv link, core contribution
 - Comparison tables where appropriate
-- At least <N> papers (quick=15, standard=30, deep=50)
+- OmniBox report paths (for papers already in local KB)
 
-Also write <output_dir>/<topic>/vecdb_papers.md with the raw vec-db results table.
+---
+
+## Step 4: Social Platform Search
+
+For each topic, gather social media discussions. Use WebSearch with site: filters:
+
 ```
-
-### Agent Type B: Social Platform Search (one per topic, or one for all topics)
-
-**Prompt template:**
-```
-Search social platforms and the web for discussions about "<TOPIC>".
-
-## Platform 1: Bilibili (B站) — via WebSearch
 WebSearch: "<中文关键词> site:bilibili.com"
-WebSearch: "<topic> B站 视频 讲解"
-
-## Platform 2: Zhihu (知乎) — via WebSearch
-WebSearch: "<topic> site:zhihu.com"
-Note: WebFetch on zhihu.com returns 403 — rely on search snippets only.
-
-## Platform 3: X/Twitter — via WebSearch
+WebSearch: "<topic> 知乎 site:zhihu.com"
 WebSearch: "<english topic> site:x.com 2024 2025"
-
-## Platform 4: Reddit — via WebSearch
 WebSearch: "<english topic> site:reddit.com discussion"
-
-## Platform 5: Tech Blogs
 WebSearch: "<topic> blog deep dive 2024 2025"
-WebSearch: "<topic> 技术博客 深度解析"
+```
 
-## Output
-Write to <output_dir>/<topic>/survey_social.md with:
+**Output**: For each topic, write `survey_social.md` with:
 - Platform-organized sections (知乎/B站/Twitter/Reddit/博客)
 - Each entry: source, link, key points summary
 - Community consensus and disagreements section
-- Complete source URL list at the end
-```
-
-### Agent Type C: Comprehensive Paper List (one agent for all topics)
-
-**Prompt template:**
-```
-Build a comprehensive, deduplicated paper list covering ALL topics: <TOPIC_1>, <TOPIC_2>, ...
-
-Search strategy:
-1. Survey papers: WebSearch "<topic> survey 2024 2025 arXiv"
-2. Top conferences: WebSearch "<topic> NeurIPS ICML ICLR CVPR CoRL 2024 2025"
-3. Key work series: WebSearch for known paper series in each topic
-4. Lab frontiers: WebSearch "<company/lab> <topic> 2025"
-
-Output: <output_dir>/paper_list_comprehensive.md
-Format: Tables organized by topic, then by year. Include arXiv links.
-Target: 80+ papers total.
-```
-
-### Parallelism pattern
-
-For 3 topics at "standard" depth, launch in ONE message:
-```
-Agent 1: Academic search — Topic 1
-Agent 2: Academic search — Topic 2
-Agent 3: Academic search — Topic 3
-Agent 4: Social search — Topic 1
-Agent 5: Social search — Topics 2 & 3 (combined to reduce agents)
-Agent 6: Comprehensive paper list — all topics
-```
-
-All 6 agents run in background simultaneously.
 
 ---
 
-## Step 4: Extract Core Concepts
+## Step 5: Comprehensive Paper List
 
-After search agents complete, analyze all survey files to find high-frequency technical terms:
+Build a deduplicated master paper list across all topics. Read all `survey_academic.md` files, merge, and de-duplicate.
 
-```bash
-cat <output_dir>/*/survey_academic.md | grep -oiE '<concept_regex>' | sort | uniq -ci | sort -rn | head -30
-```
+**Output**: `<output_dir>/paper_list_comprehensive.md`
+- Tables organized by topic, then by year
+- Include arXiv links for all papers
 
-Build a concept regex from known domain terms. Select the top 10-15 concepts that:
+---
+
+## Step 6: Extract Core Concepts
+
+Analyze all survey files for high-frequency technical terms. Select top 10-15 concepts that:
 - Appear frequently across multiple papers
 - Are technical enough to warrant explanation
 - Would benefit from pseudocode illustration
 
 ---
 
-## Step 5: Generate Concept Documents
+## Step 7: Generate Concept Documents
 
-Launch 2 parallel agents to write concept docs:
+For each concept, write `<output_dir>/concepts/<concept_name>.md`:
 
-**Agent prompt template:**
-```
-Write detailed concept explanation documents for the following terms.
-Each document goes to <output_dir>/concepts/<concept_name>.md
-
-Format per document:
-
+```markdown
 # [Concept Name]
 
 ## One-line Definition
 
 ## Intuitive Explanation
-(Analogy or diagram to build understanding)
 
 ## Mathematical Formulation
-(Key equations in LaTeX)
-
-## Role in <domain>
 
 ## Pseudocode Implementation
 ```python
-# PyTorch-style pseudocode, detailed enough to serve as implementation reference
 class ConceptName(nn.Module):
     ...
 ```
-
-## Relationship to Other Concepts
-(Cross-references to other concept docs)
 
 ## Representative Papers
 (2-3 papers with arXiv links)
@@ -264,185 +145,76 @@ class ConceptName(nn.Module):
 
 ---
 
-## Step 6: Compile Final Reports
+## Step 8: Compile Final Reports
 
-For each topic, launch a final report compilation agent:
+For each topic, integrate all materials into `FINAL_REPORT.md`:
 
-**Agent prompt template:**
-```
-Integrate all research materials into a comprehensive final survey report.
-
-Input files (read all):
-- <topic>/survey_academic.md
-- <topic>/vecdb_papers.md
-- <topic>/survey_social.md
-- paper_list_comprehensive.md
-
-Output: <topic>/FINAL_REPORT.md
-
-Structure:
+```markdown
 # <Topic> 综述报告
 
-> 生成日期: <date>
-> 论文覆盖: X篇
-> 信息源: 学术论文 + Vec-db顶会 + Semantic Scholar + 社交平台
+> 生成日期: <date> | 论文覆盖: X篇 | 信息源: 7 academic sources + 5 social platforms
 
----
-
-## 摘要
-(300 words)
+## 摘要 (300 words)
 
 ## 1. 引言与定义
 
 ## 2. 发展时间线
-(Table: year | paper | link | contribution)
 
 ## 3. 技术分类体系
-(Multiple subsections by approach/method)
 
 ## 4. 关键论文详解 (Top 15-20)
-(Each: title+link, contribution, method, experiments, limitations)
 
-## 5. 社区观点与产业动态
-(Integrated from social survey)
+## 5. 社区观点与产业动态 (from survey_social.md)
 
-## 6. 核心概念索引
-(Links to ../concepts/*.md)
+## 6. 核心概念索引 (links to ../concepts/*.md)
 
 ## 7. 开放问题与未来方向
 
 ## 8. 完整论文列表
-(Deduplicated, every paper has [title](url) markdown link, grouped by year)
+```
 
 Requirements:
 - Every paper MUST have an arXiv or publication link
-- Deduplicate across all input sources
 - At least 50 unique papers per report (standard depth)
 - Chinese text, English paper titles
 - 800+ lines
-```
 
 ---
 
-## Step 7: Generate README Index
+## Step 9: Generate README Index
 
 Write `<output_dir>/README.md` with:
 - Directory structure tree
-- Quick navigation table (topic → FINAL_REPORT link)
-- Concept glossary table (concept → doc link + one-line definition)
-- Relationship diagram between topics (ASCII or description)
-- Statistics summary (total files, lines, papers, links)
+- Quick navigation table
+- Concept glossary table
+- Statistics summary
 
 ---
 
-## Step 8: Final Verification
-
-Run a verification pass:
+## Step 10: Final Verification
 
 ```bash
-# Count deliverables
 find <output_dir> -name "*.md" -exec sh -c 'echo "$(wc -l < "$1") lines: $1"' _ {} \; | sort -rn
-
-# Verify all FINAL_REPORTs exist
 for topic in <topics>; do
   [ -f "<output_dir>/$topic/FINAL_REPORT.md" ] && echo "✓ $topic" || echo "✗ MISSING: $topic"
 done
-
-# Count total links
-grep -roh '\[.*\](http[^)]*' <output_dir>/*.md <output_dir>/*/*.md | wc -l
 ```
-
-Report to user:
-```
-Survey complete!
-- X files / Y lines / Z KB
-- N total papers with links
-- M concept documents with pseudocode
-Entry point: <output_dir>/README.md
-```
-
----
-
-## Search Source Reference
-
-### Vec-db (Precision — top-venue papers)
-
-```bash
-cd <VECDB_PATH>
-npx tsx src/cli.ts search "<query>" --top 15
-npx tsx src/cli.ts status  # check paper count
-```
-
-**Tips:**
-- Run 5-8 diverse queries per topic (different angles)
-- Use English queries (embeddings are English-centric)
-- Score > 0.25 is relevant; > 0.35 is highly relevant
-- Results include title, venue, year, abstract — NOT arXiv ID (look up separately)
-- Run ALL queries in parallel (multiple Bash calls in one message)
-
-### Semantic Scholar API (Breadth — 200M+ papers)
-
-**Keyword search (by citation count):**
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<URL_ENCODED>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&sort=citationCount:desc"
-```
-
-**Recent papers:**
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=<KEYWORDS>&limit=20&fields=title,year,authors,citationCount,externalIds,abstract&year=2024-2026"
-```
-
-**Citation graph (successors):**
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/ArXiv:<ID>?fields=title,year,citationCount,citations.title,citations.year,citations.authors,citations.externalIds,citations.citationCount"
-```
-
-**Rate limit:** 5000 req/5min unauthenticated. Space 0.5s apart for bulk queries.
-
-### AlphaXiv (Paper Reading — free full text)
-
-**Note: WebFetch on alphaxiv.org returns 403 — use curl with a browser User-Agent instead:**
-
-```bash
-# Structured overview (try first)
-curl -sL -A "Mozilla/5.0" "https://www.alphaxiv.org/overview/<ARXIV_ID>.md"
-
-# Full text (if overview insufficient)
-curl -sL -A "Mozilla/5.0" "https://www.alphaxiv.org/abs/<ARXIV_ID>.md"
-```
-
-Fallback: `wget https://arxiv.org/pdf/<ID> -O <ID>.pdf` (arxiv.org works fine with WebFetch too)
-
-### WebSearch (Cutting-edge + blogs)
-
-Use for: latest arXiv preprints, tech blogs, social platforms via `site:` filters, Google Scholar-indexed papers.
-
-### Brave Search MCP (enhanced web search, if available)
-
-```
-mcp__brave-search__brave_web_search: "<query>"
-mcp__brave-search__brave_local_search: "<query>"  # for local/business results
-```
-
----
-
-## Troubleshooting
-
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| Vec-db returns 0 results | Wrong path or unbuilt index | Verify path; run `npx tsx src/cli.ts status` |
-| Semantic Scholar 429 | Rate limited (often transient) | Wait 3-5s and retry; if persistent, rely on vec-db + WebSearch |
-| AlphaXiv 403 via WebFetch | Blocks non-browser clients | Use `curl -sL -A "Mozilla/5.0"` instead |
-| AlphaXiv 404 | Paper not indexed | Fall back to PDF download |
-| Subagent timeout | Too much work per agent | Split into smaller tasks per agent |
-| WebFetch 403 on Zhihu | Server blocks bots | Use search snippets only |
 
 ---
 
 ## Depth Presets
 
-| Preset | Papers/topic | Concepts | Vec-db queries | Social platforms | Report lines |
-|--------|-------------|----------|----------------|-----------------|-------------|
-| quick | ~15 | 5 | 3-4 | Skip or 1-2 WebSearch | 500+ |
-| standard | ~30-50 | 10-15 | 6-8 | All 5 via WebSearch site: filters | 800+ |
-| deep | ~50-100 | 15-20 | 8-10 | All 5 + AlphaXiv deep fetch | 1000+ |
+| Preset | Papers/topic | Concepts | litian-academic-search --k | Social platforms | Report lines |
+|--------|-------------|----------|---------------------------|-----------------|-------------|
+| quick | ~15 | 5 | 8 | Skip or 1-2 WebSearch | 500+ |
+| standard | ~30-50 | 10-15 | 15 | All 5 via WebSearch | 800+ |
+| deep | ~50-100 | 15-20 | 25 | All 5 + deep dive | 1000+ |
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| litian-academic-search returns few results | Try broader query; add `--sources all` |
+| OmniBox unavailable | litian-academic-search skips it gracefully |
+| Semantic Scholar 429 | litian-academic-search handles retry internally |
+| WebFetch 403 on Zhihu | Use search snippets only |
