@@ -1,18 +1,24 @@
 ---
-name: experiment_report
-description: Write structured experiment reports for robot learning and AI research. Trigger when user says "写个报告", "总结实验结果", "实验报告", "experiment report", "总结一下当前实验", "出个report", "写个技术报告", or asks to summarize training results with metrics tables and W&B links.
+name: experiment-report
+description: Write structured experiment reports from experiment-run output. Consumes results/<run_id>/ + EXPERIMENT_TRACKER.md. Reports are scannable: TL;DR + summary table first. Trigger when user says "写个报告", "总结实验结果", "实验报告", "experiment report", or after experiment-run completes.
 ---
 
-# experiment_report
+# Experiment Report: Structured Results Writeup
 
-Generate structured experiment reports for robot learning / AI research. Reports are designed to be **scannable** — a reader should get the key takeaway from the TL;DR and summary table without reading the full report.
+Generate structured reports from experiment-run output. **Scannable**: TL;DR + summary table first, methodology later.
 
-## When to Use
+## Input
 
-- After completing an experiment run
-- When documenting ablations or comparisons
-- When proposing next experiments based on findings
-- When writing to Notion, markdown, or any structured doc
+- `refine-logs/EXPERIMENT_TRACKER.md` — run statuses + results (from experiment-run)
+- `refine-logs/results/<run_id>/` — per-run logs, metrics, checkpoints
+- `refine-logs/EXPERIMENT_PLAN.md` — claim context (which claim each run tests)
+- W&B run URLs (if configured)
+
+## Pipeline Position
+
+```
+experiment-run → experiment-report (YOU ARE HERE) → paper-write
+```
 
 ## Report Structure
 
@@ -118,3 +124,20 @@ Always include a reference section with paths and links:
 - One report per experiment batch; group related runs under a single report with sub-sections
 - Date every report (YYYY-MM-DD)
 - When writing to Notion: use Notion table syntax, bold the best results, include inline links
+
+## Output
+
+```
+refine-logs/
+├── EXPERIMENT_REPORT.md     ← Main deliverable
+└── results/                  ← (from experiment-run, read not written)
+```
+
+## Calls
+
+- Reads: refine-logs/EXPERIMENT_TRACKER.md, refine-logs/results/<run_id>/
+- Reads: refine-logs/EXPERIMENT_PLAN.md (for claim context)
+
+## Called by
+
+experiment-run → experiment-report (YOU ARE HERE) → paper-write
