@@ -155,17 +155,93 @@ Rules:
 - One block must directly validate the Problem Anchor
 - If a modern primitive is central → include a necessity check (ablation removing it)
 
-## Phase 5: Self-Review
+## Phase 5: External Adversarial Review (Codex MCP)
 
-Before finalizing, critically review the proposal:
+**Default: ON.** Use Codex MCP (`mcp__codex__exec`) to get an independent model (GPT-5.4) to review the proposal as a senior ML reviewer. This is the adversarial check that catches blind spots.
 
-1. **Anchor check**: Does the method still solve the original problem?
-2. **Simplicity check**: Can anything be removed without weakening the main claim?
-3. **Novelty check**: Is the dominant contribution clearly different from closest work?
-4. **Feasibility check**: Can this be built with stated resources?
-5. **Drift check**: Did we accidentally change the problem?
+If Codex MCP is unavailable, fall back to internal self-review.
 
-If `--reviewer <model>` is set and Codex MCP is available, send to external reviewer for independent scoring (7 dimensions: Problem Fidelity, Method Specificity, Contribution Quality, Feasibility, Validation Focus, Venue Readiness). Iterate up to `--max-rounds` until score ≥ 8.
+### 5.1: Send to Reviewer
+
+```json
+mcp__codex__exec({
+  model: "gpt-5.4",
+  config: {"model_reasoning_effort": "xhigh"},
+  prompt: |
+    You are a senior ML reviewer for a top venue (NeurIPS/ICML/ICLR/CoRL).
+    This is an early-stage, method-first research proposal.
+
+    Your job is NOT to reward extra modules or a giant benchmark checklist.
+    Your job IS to stress-test whether the proposed method:
+    (1) still solves the original anchored problem,
+    (2) is concrete enough to implement,
+    (3) presents a focused, elegant contribution.
+
+    Review principles:
+    - Prefer the smallest adequate mechanism over a larger system.
+    - Penalize parallel contributions that make the paper feel unfocused.
+    - Do not ask for extra experiments unless needed to prove core claims.
+
+    Read the Problem Anchor first. If your suggested fix would change the problem
+    being solved, call that out explicitly as DRIFT.
+
+    === PROPOSAL ===
+    [Paste the FULL proposal from Phase 3-4]
+    === END PROPOSAL ===
+
+    Score these 7 dimensions from 1-10:
+
+    1. **Problem Fidelity** (15%): Does the method still attack the original bottleneck?
+    2. **Method Specificity** (25%): Are interfaces, representations, losses, training stages concrete?
+    3. **Contribution Quality** (25%): One dominant mechanism-level contribution with real novelty?
+    4. **Feasibility** (10%): Can this be built with stated resources?
+    5. **Validation Focus** (5%): Are experiments minimal but sufficient for core claims?
+    6. **Venue Readiness** (5%): Would the contribution feel sharp enough for a top venue?
+    7. **Simplicity** (15%): Is this the smallest adequate mechanism, or is it overbuilt?
+
+    **OVERALL SCORE** (1-10): weighted as above.
+
+    For each dimension scoring < 7: specific weakness + concrete fix + priority (CRITICAL/IMPORTANT/MINOR).
+    Then add:
+    - **Simplification Opportunities**: 1-3 ways to delete/merge components. Write NONE if tight.
+    - **Drift Warning**: NONE if proposal still solves anchored problem; else explain drift.
+    - **Verdict**: READY (≥8) / REVISE / RETHINK
+})
+```
+
+### 5.2: Parse Review & Iterate
+
+Save review to `refine-logs/round-N-review.md`. Track scores in `refine-logs/score-history.md`:
+
+```markdown
+| Round | P.Fidelity | M.Specificity | C.Quality | Feasibility | V.Focus | V.Readiness | Simplicity | Overall | Verdict |
+|-------|-----------|---------------|-----------|-------------|---------|-------------|------------|---------|---------|
+| 1     | X         | X             | X         | X           | X       | X           | X          | X       | REVISE  |
+```
+
+### 5.3: Revise With Anchor Check
+
+Before changing anything:
+1. Copy **Problem Anchor verbatim**
+2. **Anchor Check**: Does the revised method still solve it? Which reviewer suggestions would cause drift?
+3. **Simplicity Check**: What can be removed? Which reviewer suggestions add unnecessary complexity?
+
+Process feedback:
+- **Valid** → sharpen mechanism, simplify
+- **Debatable** → revise with reasoning
+- **Drift-causing** → push back with Problem Anchor as evidence
+
+Save revised proposal to `refine-logs/round-N-refinement.md` (full proposal, not just diffs).
+
+### 5.4: Re-evaluate
+
+Send revised proposal back to Codex in a follow-up call. Iterate until:
+- Overall score ≥ 8 AND verdict READY AND no unresolved drift
+- Or `--max-rounds` reached
+
+### 5.5: Fallback Self-Review (no Codex MCP)
+
+If Codex MCP unavailable, critically self-review on the same 7 dimensions. Flag that no external reviewer was used.
 
 ## Output
 
@@ -173,8 +249,9 @@ If `--reviewer <model>` is set and Codex MCP is available, send to external revi
 refine-logs/
 ├── FINAL_PROPOSAL.md        ← Clean final proposal
 ├── round-0-proposal.md       ← Initial
-├── round-1-review.md         ← (if reviewer used)
-├── round-1-refinement.md     ← (if reviewer used)
+├── round-1-review.md         ← Codex reviewer response
+├── round-1-refinement.md     ← Revised proposal
+├── score-history.md          ← Score tracking table
 └── literature_grounding.md   ← Phase 1 results
 ```
 
