@@ -124,7 +124,16 @@ Based on user direction, go deeper into selected sub-topics.
 
 **Repeat Step 4 until user is satisfied with coverage.**
 
-### Step 5: Synthesize & Write the Review
+### Step 5: Ingest into OmniBox (MANDATORY)
+
+For every paper selected during exploration, call `paper-read` to ingest:
+```
+paper-read <arxiv_id> --topic <detected_topic> --light
+```
+
+This is the global contract — every paper discovered gets into the local KB.
+
+### Step 6: Synthesize & Write the Review
 
 Produce a structured topic review document.
 
@@ -231,7 +240,7 @@ For someone working on <specific sub-area>:
 - If code repo exists, always include it in a separate column
 - Inline mentions: `[Author et al. (2025)](https://arxiv.org/abs/XXXX.XXXXX)`
 
-### Step 6: Offer Next Steps
+### Step 7: Offer Next Steps
 
 After presenting the review:
 

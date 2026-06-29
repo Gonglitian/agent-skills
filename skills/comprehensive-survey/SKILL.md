@@ -74,6 +74,15 @@ For each topic, also run focused sub-queries for key aspects (parallel with the 
 
 The skill handles de-duplication, ranking, and synthesis automatically.
 
+**After search completes, ingest each paper into OmniBox:**
+
+For every top-k paper found, call `paper-read` in light mode for fast ingestion:
+```
+paper-read <arxiv_id> --topic <detected_topic> --light
+```
+
+This is the global contract: ALL papers discovered through the research pipeline get ingested into OmniBox.
+
 **Output**: For each topic, write `survey_academic.md` containing:
 - Structured sections by method/approach (from litian-academic-search synthesis)
 - Every paper: title, authors, year, venue, arXiv link, core contribution
