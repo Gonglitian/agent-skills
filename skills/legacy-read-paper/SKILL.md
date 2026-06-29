@@ -1,5 +1,5 @@
 ---
-name: read-paper
+name: legacy-read-paper
 description: "Deep-read an academic paper (PDF or arXiv ID) and produce a structured markdown note with figure analysis. Use this skill whenever the user wants to read, summarize, or take notes on a research paper — including phrases like '读一下这篇论文', 'summarize this paper', 'read paper 2401.xxxxx', '论文笔记', 'paper notes', or any mention of reading/analyzing an arXiv paper or PDF. Also trigger when the user provides a paper ID or PDF path and expects a detailed summary. This skill handles the full pipeline: text segmentation, figure extraction via VLM, cross-analysis, and final note assembly."
 ---
 

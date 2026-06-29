@@ -1,5 +1,5 @@
 ---
-name: arxiv-deepdive
+name: legacy-arxiv-deepdive
 description: >-
   从一个 arXiv 链接 / arXiv ID / 论文标题出发，把论文 PDF 与其官方代码仓库一起作为上下文深读，产出两份面向工程师的报告：
   ① 01_highlevel.md（High-Level 叙述 / 核心 idea）和 ② 02_technical.md（工程技术深挖：架构、训练细节、推理细节、代码层面、复现要点）。

@@ -1,5 +1,5 @@
 ---
-name: omnibox-search
+name: legacy-omnibox-search
 description: >-
   在 OmniBox 论文知识库(~/proj/omnibox/papers,965 篇中文工程报告)里做语义检索。**索引的是两份报告(01_highlevel + 02_technical)的全文内容**(分块嵌入,29k+ chunk),不止摘要——所以连"技术报告深处某个训练细节/架构选择/代码片段"都搜得到,并会告诉你命中是哪篇的哪一节。
   底层 SiliconFlow bge-m3 + 本地 sqlite-vec,支持按 topic / 受控 tag 过滤。(注:索引的是我们写的报告,非 PDF 原文。)
