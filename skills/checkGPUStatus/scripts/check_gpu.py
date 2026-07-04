@@ -13,17 +13,18 @@
 import re, subprocess, sys, shlex
 
 SERVERS = [
-    {"name": "HPCC",           "host": "hpcc",           "user": "lgong024",     "type": "slurm",  "note": "UCR HPCC · 需 UCR VPN (ucrvpn)"},
-    {"name": "BCC",            "host": "ucr-bcc",        "user": "lgong024",     "type": "slurm",  "note": "UCR BCC · 需 UCR VPN (ucrvpn)"},
-    {"name": "TASL-LabServer", "host": "tasl-labserver", "user": "vla-reasoning","type": "direct", "note": "Tailscale 直连 · 8× RTX6000 Ada 48G"},
-    {"name": "TASL-7",         "host": "tasl-7",         "user": "jiachenl",     "type": "direct", "note": "Tailscale 直连 · 1× RTX4090 24G"},
+    {"name": "HPCC",           "host": "hpcc",            "user": "lgong024",     "type": "slurm",  "note": "UCR HPCC · 需 UCR VPN (ucrvpn)"},
+    {"name": "BCC",            "host": "ucr-bcc",         "user": "lgong024",     "type": "slurm",  "note": "UCR BCC · 需 UCR VPN (ucrvpn)"},
+    {"name": "TASL-LabServer", "host": "tasl-labserver",  "user": "vla-reasoning","type": "direct", "note": "Tailscale 直连 · 8× RTX6000 Ada 48G"},
+    {"name": "TASL-7",         "host": "tasl-7",          "user": "jiachenl",     "type": "direct", "note": "Tailscale 直连 · 1× RTX4090 24G"},
+    {"name": "Brev",           "host": "awesome-gpu-name","user": "nvidia",       "type": "direct", "note": "cloudflared 直连(无需 VPN) · 8× A100-SXM4 80G · ⚠️共享容器节点(用完即杀进程)"},
 ]
 
 # GPU 型号 → 单卡显存(GB)，Slurm 计算节点无法直连 nvidia-smi，仅作标称参考
 VRAM = {"a100": 80, "h100": 80, "blackwell6000": 96, "ada6000": 48, "rtx6000": 48,
         "p100": 16, "k80": 12, "2080ti": 11, "a6000": 48, "null": None}
 
-SSH = ["ssh", "-o", "ConnectTimeout=15", "-o", "BatchMode=yes",
+SSH = ["ssh", "-T", "-o", "ConnectTimeout=15", "-o", "BatchMode=yes",
        "-o", "StrictHostKeyChecking=accept-new"]
 
 

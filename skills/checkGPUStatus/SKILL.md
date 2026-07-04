@@ -1,13 +1,13 @@
 ---
 name: checkGPUStatus
-description: 巡检本期 SSH 可连的 4 台远程服务器（HPCC / BCC / TASL-LabServer / TASL-7）的 GPU 情况——每卡显存与利用率、Slurm 集群的账号配额/排队作业/全节点空闲 GPU，并算出"我实际还能新申请多少张"。当用户说"检查 GPU""看下 GPU 显存""GPU 情况""哪台服务器有空卡""查一下算力""where can I run""check GPU status""GPU 够不够""有没有空闲显卡"等，或在准备起训练/挑服务器时触发。
+description: 巡检本期 SSH 可连的 5 台远程服务器（HPCC / BCC / TASL-LabServer / TASL-7 / Brev）的 GPU 情况——每卡显存与利用率、Slurm 集群的账号配额/排队作业/全节点空闲 GPU，并算出"我实际还能新申请多少张"。当用户说"检查 GPU""看下 GPU 显存""GPU 情况""哪台服务器有空卡""查一下算力""where can I run""check GPU status""GPU 够不够""有没有空闲显卡"等，或在准备起训练/挑服务器时触发。
 ---
 
 # checkGPUStatus
 
-一条命令 SSH 到 4 台 server 汇总 GPU 现状。**用户提到检查 GPU/显存/挑服务器时直接调用本 skill。**
+一条命令 SSH 到 5 台 server 汇总 GPU 现状。**用户提到检查 GPU/显存/挑服务器时直接调用本 skill。**
 
-## 覆盖的 4 台（本期 SSH 配置内）
+## 覆盖的 5 台（本期 SSH 配置内）
 
 | server | host 别名 | 连接 | 类型 |
 |---|---|---|---|
@@ -15,6 +15,7 @@ description: 巡检本期 SSH 可连的 4 台远程服务器（HPCC / BCC / TASL
 | BCC | `ucr-bcc` | UCR VPN | Slurm（账号 lgong024，无 GPU 配额上限） |
 | TASL-LabServer | `tasl-labserver` | Tailscale 直连 | 裸机 nvidia-smi（8× RTX6000 Ada） |
 | TASL-7 | `tasl-7` | Tailscale 直连 | 裸机 nvidia-smi（1× RTX4090） |
+| Brev | `awesome-gpu-name` | cloudflared（无需 VPN） | 裸机 nvidia-smi（8× A100-80G，共享容器节点·用完即杀进程） |
 
 ## 怎么跑
 
